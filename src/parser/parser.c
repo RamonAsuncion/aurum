@@ -4,7 +4,6 @@
 #include "../ast/ast.h"
 
 /*
-try_except_expression is not being called anywehere.
 parse_variable and parse_const need fixing.
 the assignment operator only works when there is a type declaration.a
 */
