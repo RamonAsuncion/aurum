@@ -1,0 +1,10 @@
+
+I.16 FibonacciSequence(I.16 n)
+{
+    if (n <= 1)
+        return n;
+    else
+        return FibonacciSequence(n - 1) + FibonacciSequence(n - 2);
+}
+
+PrintLn(FibonacciSequence(5));
