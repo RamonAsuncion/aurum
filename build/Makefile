@@ -28,3 +28,4 @@ clean:
 	rm -f ../src/parser/*.o
 	rm -f ../src/ast/*.o
 	rm -f ../src/runtime/*.o
+	rm -f ast.dot ast.png
