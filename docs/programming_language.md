@@ -1,7 +1,5 @@
 # Aurum Programming Language
 
-https://medium.com/young-coder/how-i-wrote-a-lexer-39f4f79d2980
-
 ## Aurum is "gold" in Latin
 
 ### FileType: au, aur
@@ -12,8 +10,8 @@ focused on simplicity and minimalism.
 
 ## Plan
 
-- [ x ] Part 1: Lexer
-- [ x ] Part 2: Parser
+- [x] Part 1: Lexer
+- [x] Part 2: Parser
 - [ ] Part 3: Evaluator
 
 ## Definitions
