@@ -2,6 +2,8 @@
 
 ## References and Resources
 
+0. CSCI 308 Programming Language Design at Bucknell University
+
 1. [How I wrote a Lexer by Chirag Khandelwal](https://medium.com/young-coder/how-i-wrote-a-lexer-39f4f79d2980)
 
 2. [Crafting Interpreters by Bob Nystrom](https://craftinginterpreters.com/)
