@@ -30,7 +30,6 @@ TrieNode *init_keyword_trie()
   trie_insert(root, "for", TOKEN_FOR);
   trie_insert(root, "while", TOKEN_WHILE);
   trie_insert(root, "else", TOKEN_ELSE);
-  trie_insert(root, "elseif", TOKEN_ELIF);
   trie_insert(root, "final", TOKEN_CONST);
   trie_insert(root, "if", TOKEN_IF);
   trie_insert(root, "break", TOKEN_BREAK);
@@ -270,7 +269,6 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_FOR: printf("%-6s", "for"); break;
     case TOKEN_WHILE: printf("%-6s", "while"); break;
     case TOKEN_ELSE: printf("%-6s", "else"); break;
-    case TOKEN_ELIF: printf("%-6s", "elseif"); break;
     case TOKEN_CONST: printf("%-6s", "const"); break;
     case TOKEN_IF: printf("%-6s", "if"); break;
     case TOKEN_BREAK: printf("%-6s", "break"); break;
