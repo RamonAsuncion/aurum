@@ -5,7 +5,7 @@
 
 int main() 
 {
-  const char *source = "a = 5;\na += 10 * 9;\nprintln( a );\n";
+  const char *source = "2 3 + 5 -";
   Scanner scanner;
   init_scanner(&scanner, source);
   scan_tokens(&scanner);

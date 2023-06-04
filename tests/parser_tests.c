@@ -1,4 +1,5 @@
 #include <assert.h>
+
 #include "lexer.h"
 #include "parser.h"
 #include "ast.h"

@@ -6,6 +6,11 @@
 #include "lexer.h"
 
 /**
+ * @file scanner.h
+ * @brief Scanner implementation.
+*/
+
+/**
  * @brief Scanner structure.
  */
 typedef struct {
@@ -81,10 +86,10 @@ Token scan_token(Scanner *scanner);
  */
 void scan_tokens(Scanner *scanner);
 
-/**
- * @brief Destroy a scanner.
- * @param scanner Pointer to the scanner structure.
-*/
-void destroy_scanner(Scanner *scanner);
+// /**
+//  * @brief Destroy a scanner.
+//  * @param scanner Pointer to the scanner structure.
+// */
+// void destroy_scanner(Scanner *scanner);
 
-#endif
+#endif // _scanner_h_
