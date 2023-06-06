@@ -62,6 +62,7 @@ TrieNode *init_keyword_trie()
   trie_insert(root, "end", TOKEN_END);
   trie_insert(root, "then", TOKEN_THEN);
   trie_insert(root, "as", TOKEN_AS);
+  trie_insert(root, "not", TOKEN_NOT_EQUAL);
   return root;
 }
 
@@ -170,6 +171,7 @@ Token create_token(TokenType type, Scanner *scanner)
 
 Token scan_token(Scanner *scanner)
 {
+  // FIXME: This is not working correctly to make blocks.
   // if (is_whitespace(scanner)) {
   //   advance(scanner);
   //   return create_token(TOKEN_WHITESPACE, scanner);
@@ -183,8 +185,6 @@ Token scan_token(Scanner *scanner)
   char c = advance(scanner);
   switch (c) {
     case '*': return create_token(TOKEN_MULTIPLY, scanner);
-    case '(': return create_token(TOKEN_LPAREN, scanner);
-    case ')': return create_token(TOKEN_RPAREN, scanner);
     case '%': return create_token(TOKEN_MODULO, scanner);
     case '~': return create_token(TOKEN_BITWISE_NOT, scanner);
     case '^': return create_token(TOKEN_BITWISE_XOR, scanner);
@@ -194,8 +194,6 @@ Token scan_token(Scanner *scanner)
     case '\'': return create_token(TOKEN_SINGLE_QUOTE, scanner);
     case '"': return create_token(TOKEN_DOUBLE_QUOTE, scanner);
     case '=': return create_token(TOKEN_EQUAL, scanner);
-    //  I think I'm mixing up ! and != because if it's != it should have match.
-    case '!': return create_token(TOKEN_NOT_EQUAL, scanner);
     case '+': return create_token(TOKEN_ADD, scanner);
     case '-': return create_token(TOKEN_SUBTRACT, scanner);
     case '&': return create_token(TOKEN_BITWISE_AND, scanner);
@@ -215,19 +213,29 @@ Token scan_token(Scanner *scanner)
       }
     case '/':
       if (match(scanner, '/')) {
-        // Single-line comment
-        while (peek(scanner) != '\n' && !is_at_end(scanner)) {
-            advance(scanner);
-        }
+          // Single-line comment
+          while (peek(scanner) != '\n' && !is_at_end(scanner)) {
+              advance(scanner);
+          }
+          if (peek(scanner) == '\n') {
+              advance(scanner); // Consume '\n'
+          }
+          // Recursively get the next token after the comment
+          return scan_token(scanner);
       } else if (match(scanner, '*')) {
           // Multi-line comment
           while (!(peek(scanner) == '*' && peek_next(scanner) == '/') && !is_at_end(scanner)) {
+              if (peek(scanner) == '\n') {
+                  scanner->line++; // Increment line count
+              }
               advance(scanner);
           }
           if (!is_at_end(scanner)) {
               advance(scanner); // Consume '*'
               advance(scanner); // Consume '/'
           }
+          // Recursively get the next token after the comment
+          return scan_token(scanner);
       } else {
           return create_token(TOKEN_DIVIDE, scanner);
       }
@@ -262,8 +270,6 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_ADD: printf("%-6s", "+"); break;
     case TOKEN_SUBTRACT: printf("%-6s", "-"); break;
     case TOKEN_MULTIPLY: printf("%-6s", "*"); break;
-    case TOKEN_LPAREN: printf("%-6s", "("); break;
-    case TOKEN_RPAREN: printf("%-6s", ")"); break;
     case TOKEN_IDENTIFIER: printf("%-6s", "IDEN"); break;
     case TOKEN_NUMBER: printf("%-6s", "DIGIT"); break;
     case TOKEN_FOR: printf("%-6s", "for"); break;
@@ -296,7 +302,8 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_DIVIDE: printf("%-6s", "/"); break;
     case TOKEN_MODULO: printf("%-6s", "%"); break;
     case TOKEN_EQUAL: printf("%-6s", "="); break;
-    case TOKEN_NOT_EQUAL: printf("%-6s", "!="); break;
+
+    case TOKEN_NOT_EQUAL: printf("%-6s", "not"); break;
     case TOKEN_LESS: printf("%-6s", "<"); break;
     case TOKEN_LESS_EQUAL: printf("%-6s", "<="); break;
     case TOKEN_GREATER: printf("%-6s", ">"); break;

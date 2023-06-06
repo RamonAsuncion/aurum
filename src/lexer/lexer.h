@@ -15,6 +15,7 @@
  * @brief Token types.
  */
 typedef enum {
+  TOKEN_UNKNOWN,
   TOKEN_DUP,
   TOKEN_SWAP,
   TOKEN_POP,
@@ -33,12 +34,8 @@ typedef enum {
   TOKEN_LOAD,
   TOKEN_SET,
   TOKEN_REQUIRE,
-  TOKEN_UNKNOWN,
-  TOKEN_LPAREN,
-  TOKEN_RPAREN,
   TOKEN_IDENTIFIER,
   TOKEN_NUMBER,
-  TOKEN_EOF,
   TOKEN_FOR,
   TOKEN_WHILE,
   TOKEN_ELSE,
@@ -50,7 +47,6 @@ typedef enum {
   TOKEN_IN,
   TOKEN_INT, // i64
   TOKEN_FLOAT, // f64
-  TOKEN_WHITESPACE,
   TOKEN_BOOL, 
   TOKEN_ADD,
   TOKEN_SUBTRACT,
@@ -77,7 +73,9 @@ typedef enum {
   TOKEN_END,
   TOKEN_THEN,
   TOKEN_AS,
-  TOKEN_PERIOD
+  TOKEN_PERIOD,
+  TOKEN_EOF,
+  TOKEN_WHITESPACE
 } TokenType;
 
 /**

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "lexer.h"
 #include "scanner.h"
 #include "stack.h"
@@ -40,8 +41,9 @@ void run_interpreter(const char *source_code)
   Token token;
   Stack *stack = create_stack();
 
-  int value; // Declare the "value" variable here
+  int value; 
   int a, b, c;
+  bool else_case_encountered = false;
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
     // printf("Token: %u, Lexeme: %s\n", token.type, token.lexeme);
@@ -101,6 +103,39 @@ void run_interpreter(const char *source_code)
           push(stack, 0);
         }
         break;
+      case TOKEN_IF:
+        if (pop(stack) == 0) {
+          int block_depth = 1;
+          bool else_case_encountered = false;
+          while (block_depth > 0) {
+              token = scan_token(&scanner);
+              if (token.type == TOKEN_IF) {
+                  block_depth++;
+              } else if (token.type == TOKEN_ELSE && !else_case_encountered && block_depth == 1) {
+                  else_case_encountered = true;
+                  break;
+              } else if (token.type == TOKEN_END) {
+                  block_depth--;
+              } else {
+                  continue;
+              }
+          }
+        }
+        break;
+      case TOKEN_ELSE:
+        if (!else_case_encountered) {
+          int block_depth = 1;
+          while (block_depth > 0) {
+              token = scan_token(&scanner);
+              if (token.type == TOKEN_IF) {
+                  block_depth++;
+              } else if (token.type == TOKEN_END) {
+                  block_depth--;
+              }
+          }
+        }
+        break;
+      case TOKEN_END: break;
       default:
         fprintf(stderr, "Unknown token type: %u\n", token.type);
         exit(1);
@@ -116,3 +151,4 @@ void run_interpreter(const char *source_code)
 
   // destroy_scanner(&scanner);
 }
+
