@@ -86,10 +86,4 @@ Token scan_token(Scanner *scanner);
  */
 void scan_tokens(Scanner *scanner);
 
-// /**
-//  * @brief Destroy a scanner.
-//  * @param scanner Pointer to the scanner structure.
-// */
-// void destroy_scanner(Scanner *scanner);
-
 #endif // _scanner_h_

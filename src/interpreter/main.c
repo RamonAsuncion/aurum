@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     printf("Error: Unknown-unsupported file format.\n");
     return 1;
   }
-  
+
   FILE *file = fopen(filename, "r");
   if (!file) {
     printf("Error: Could not open file '%s'\n", filename);
@@ -25,6 +25,11 @@ int main(int argc, char *argv[]) {
   long file_size = ftell(file);
   fseek(file, 0, SEEK_SET);
 
+  if (file_size == 0) {
+    fclose(file);
+    return 1;
+  }
+
   // Allocate a buffer to hold the file contents
   char *source_code = (char*)malloc(file_size + 1);
   if (!source_code) {
@@ -34,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Read the file contents into the buffer
-  size_t bytes_read = fread(source_code, 1, file_size, file);
+  long bytes_read = fread(source_code, 1, file_size, file);
   if (bytes_read != file_size) {
     printf("Error: Could not read file '%s'\n", filename);
     fclose(file);
