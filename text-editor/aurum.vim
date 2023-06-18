@@ -36,7 +36,7 @@ syn keyword aurumConstants final true false
 highlight aurumConstants ctermfg=208 guifg=#ff8700
 
 " Stack manipulation
-syn keyword aurumStackKeywords dup swap roll over peek pop rot drop
+syn keyword aurumStackKeywords dup swap roll over peek pop rot drop dump
 highlight aurumStackKeywords ctermfg=118 guifg=#87ff00
 
 " Memory operations
