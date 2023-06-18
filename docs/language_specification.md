@@ -1,3 +1,118 @@
 # Language Specification Document
 
 Reference: [Specification Language](https://en.wikipedia.org/wiki/Specification_language)
+
+## Stack manipulation
+
+```
+dup   ( a -- a a )
+drop  ( a -- )
+swap  ( a b -- b a )
+over  ( a b -- a b a )
+rot   ( a b c -- b c a )
+```
+
+## Arithmetic operators
+
+```
++    ( a b -- a+b )
+-    ( a b -- a-b )
+*    ( a b -- a*b )
+/    ( a b -- a/b )
+%    ( a b -- a%b )
+```
+
+## Comparison operators
+
+```
+=  ( a b -- a = b )
+<  ( a b -- a < b )
+>  ( a b -- a > b )
+<= ( a b -- a <= b )
+>= ( a b -- a >= b )
+```
+
+## Bitwise operators
+
+```
+& ( a b -- a & b )
+|     ( a b -- ab )
+~    ( a --~a )
+>> ( a b -- a >> b )
+<< ( a b -- a << b )
+```
+
+### Types (Future) 
+
+int    ( -- int ) 64 bit signed integer
+bool   ( -- bool ) 64 bit floating point number
+float  ( -- float ) 1 bit boolean
+ptr    ( -- ptr ) 64 bit pointer
+addr   ( -- addr ) 64 bit address (address of the procedure)
+
+### Hello World (Future)
+
+```
+func main as void
+  "Hello, World!\n" write
+end
+
+func main as 
+  "Hello, World!\n" write
+end
+```
+
+### While Loop
+
+<starting-value> while <condition> then
+  <op>
+end
+
+### If Statement
+
+<condition> if
+  <statement>
+else <condition> then
+  <statement>
+else <condition> then
+  <statement>
+end
+
+### Function Definition (Future)
+
+func <name> as <type>
+  <statement>
+end
+
+### Require (Future)
+
+require <file.ah>
+
+### Constants (Future)
+
+final <name> end
+
+### Define (Future)
+
+define <name> as <value> end
+
+example:
+
+define pi as 3.14
+  pi write
+end
+
+### Comments
+
+// This is a comment
+
+/*
+  This is also a comment.
+*/
+
+### Peek (Future)
+
+peek <name> as 
+  <statement>
+end
+
