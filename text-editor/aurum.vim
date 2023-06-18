@@ -22,6 +22,7 @@ set background=dark
 
 set iskeyword=a-z,A-Z,-,*,_,!,@
 syn keyword aurumTodos TODO XXX FIXME NOTE
+highlight aurumTodos ctermfg=202 guibg=#FF5F00
 
 " Background 
 highlight Normal ctermbg=235 guibg=#1c1b19
