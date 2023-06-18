@@ -10,14 +10,10 @@
  * @brief Stack implementation.
  */
 
-typedef struct StackNode {
-    int value;
-    struct StackNode *next;
-} StackNode;
-
 typedef struct {
-    StackNode *top;
-    int size;
+    int *data;
+    int top;
+    int capacity;
 } Stack;
 
 /**
@@ -46,5 +42,18 @@ int pop(Stack *stack);
  * @return The size of the stack.
   */
 int stack_size(Stack *stack);
+
+/**
+ * @brief Returns the top value from the stack.
+ * @param stack The stack to top the value from.
+ * @return The value dropped from the stack.
+*/
+int top(Stack *stack);
+
+/**
+ * @brief Prints the stack.
+ * @param stack The stack to print.
+*/
+void dump(Stack *stack);
 
 #endif // _stack_h_
