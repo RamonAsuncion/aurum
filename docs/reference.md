@@ -16,3 +16,4 @@ Without the following resources, this project would not have been possible:
 
 7. [Shifting Bits](http://lars.nocrew.org/forth2012/core/RSHIFT.html) How to shift bits in a number.
 
+8. [Linux System Call Table](https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md) The syscall numbers.
