@@ -1,8 +1,7 @@
 #ifndef _parser_h_
 #define _parser_h_
 
-#include "../lexer/scanner.h"
-#include "../ast/ast.h"
+#include "scanner.h"
 
 /**
  * @brief The main entry point for parsing the input and returns the root node of the AST.
@@ -53,20 +52,6 @@ ASTNode *for_expression(Scanner *scanner);
 ASTNode *while_expression(Scanner *scanner);
 
 /**
- * @brief Parse a foreach_expression node.
- * @param scanner The scanner to read tokens from.
- * @return The parsed foreach_expression node.
- */
-ASTNode *foreach_expression(Scanner *scanner);
-
-/**
- * @brief Parse a try_except_expression node.
- * @param scanner The scanner to read tokens from.
- * @return The parsed try_except_expression node.
- */
-ASTNode *try_except_expression(Scanner *scanner);
-
-/**
  * @brief Parse a factor node.
  * @param scanner The scanner to read tokens from.
  * @return The parsed factor node.
@@ -79,13 +64,6 @@ ASTNode *factor(Scanner *scanner);
  * @return The parsed term node.
  */
 ASTNode *term(Scanner *scanner);
-
-/**
- * @brief Parse an add_subtract_expression node.
- * @param scanner The scanner to read tokens from.
- * @return The parsed add_subtract_expression node.
- */
-ASTNode *add_subtract_expression(Scanner *scanner);
 
 /**
  * @brief Parse a bitwise_term node.
@@ -104,9 +82,8 @@ ASTNode *shift_term(Scanner *scanner);
 /**
  * @brief Parse an expression node.
  * @param scanner The scanner to read tokens from.
- * @return The parsed expression node.
  */
-ASTNode *expression(Scanner *scanner);
+void expression(Scanner *scanner);
 
 /**
  * @brief Parse a comparison node.
@@ -114,13 +91,6 @@ ASTNode *expression(Scanner *scanner);
  * @return The parsed comparison node.
  */
 ASTNode *comparison(Scanner *scanner);
-
-/**
- * @brief Parse a logical node.
- * @param scanner The scanner to read tokens from.
- * @return The parsed logical node.
- */
-ASTNode *logical(Scanner *scanner);
 
 /**
  * @brief Parse a statement node.
@@ -149,11 +119,4 @@ ASTNode *parse_variable_declaration(Scanner *scanner);
  */
 bool is_comparison_operator(TokenType type);
 
-/**
- * @brief Check if the given token type is a logical operator.
- * @param type The token type to check.
- * @return 1 if the token type is a logical operator, 0 otherwise.
- */
-bool is_logical_operator(TokenType type);
-
-#endif
+#endif // _parser_h_
