@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -g -c -O3 -Werror -Wall -Wextra -Wpedantic -std=c99
 LDFLAGS = -g
-INCLUDE_DIRS = -I../src/lexer -I../src/parser -I../src/ast -I../src/runtime -I../src/stack -I../src/interpreter -I../src/memory
-EXES = lexer_tests parser_tests ast_tests  stack_tests interpreter_tests
+INCLUDE_DIRS = -I../src/lexer -I../src/parser -I../src/stack -I../src/interpreter -I../src/memory
+EXES = lexer_tests parser_tests stack_tests interpreter_tests
 INTERPRETER = aurum
 
 all: $(EXES) $(INTERPRETER)
@@ -14,9 +14,6 @@ lexer_tests: ../tests/lexer_tests.o ../src/lexer/lexer.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 parser_tests: ../tests/parser_tests.o ../src/parser/parser.o ../src/lexer/lexer.o ../src/ast/ast.o
-	$(CC) $(LDFLAGS) $^ -o $@
-
-ast_tests: ../tests/ast_tests.o ../src/ast/ast.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 stack_tests: ../tests/stack_tests.o ../src/stack/stack.o
