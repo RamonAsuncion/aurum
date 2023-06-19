@@ -17,3 +17,5 @@ Without the following resources, this project would not have been possible:
 7. [Shifting Bits](http://lars.nocrew.org/forth2012/core/RSHIFT.html) How to shift bits in a number.
 
 8. [Linux System Call Table](https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md) The syscall numbers.
+
+9. [While loop](https://stackoverflow.com/questions/6949434/how-to-implement-loop-in-a-forth-like-language-interpreter-written-in-c)

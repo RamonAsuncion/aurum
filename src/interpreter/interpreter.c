@@ -8,10 +8,11 @@ Token token;
 Stack *stack;
 Scanner scanner;
 
+const char **loop_start_positions = NULL;
+size_t loop_start_positions_size = 0;
+bool *execute_loop_stack = NULL;
+size_t execute_loop_stack_size = 0;
 bool else_case_encountered = false;
-bool inside_loop = false;
-const char *loop_start_pos = NULL;
-bool execute_loop = true;
 char *memory;
 
 void print_result(Stack *stack)
@@ -64,34 +65,39 @@ void action_print()
   print_result(stack);
 }
 
-void action_while()
-{
-  loop_start_pos = scanner.current;
-  inside_loop = true;
+void action_while() {
+    execute_loop_stack = realloc(execute_loop_stack, (execute_loop_stack_size + 1) * sizeof(bool));
+    execute_loop_stack[execute_loop_stack_size++] = true;
+
+    loop_start_positions = realloc(loop_start_positions, (loop_start_positions_size + 1) * sizeof(char *));
+    loop_start_positions[loop_start_positions_size++] = scanner.current;
 }
 
-void action_then()
-{
-  if (pop(stack) == 0)
-    execute_loop = false;
+void action_then() {
+    if (pop(stack) == 0) {
+        execute_loop_stack[execute_loop_stack_size - 1] = false;
+    } else {
+        execute_loop_stack[execute_loop_stack_size - 1] = true;
+    }
 }
 
-void action_end()
-{
-  if (execute_loop) {
-    scanner.current = loop_start_pos;
-  }
-  else {
-    inside_loop = false;
-    execute_loop = true;
-  }
-}
+void action_end() {
+    int stack_top = pop(stack);
 
-void action_gt()
-{
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a > b);
+    if (execute_loop_stack[execute_loop_stack_size - 1]) {
+        if (stack_top == 0) {
+            // Remove the current loop's state from execute_loop_stack
+            execute_loop_stack_size--;
+            loop_start_positions_size--;
+        } else {
+            // Keep the top value on the stack for the next iteration
+            push(stack, stack_top);
+            scanner.current = loop_start_positions[loop_start_positions_size - 1];
+        }
+    } else {
+        loop_start_positions_size--;
+        execute_loop_stack_size--;
+    }
 }
 
 // TODO: I don't think 3+ dup works.
@@ -239,6 +245,13 @@ void action_lt()
   push(stack, a < b);
 }
 
+void action_gt()
+{
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a > b);
+}
+
 void action_right_shift()
 {
   int b = pop(stack);
@@ -345,6 +358,7 @@ void action_dump()
 void run_interpreter(const char *source_code)
 {
   stack = create_stack();
+
   init_scanner(&scanner, source_code);
   
   memory = malloc(MEMORY_CAPACITY * sizeof(char));
