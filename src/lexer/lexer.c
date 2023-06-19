@@ -248,7 +248,6 @@ void scan_tokens(Scanner *scanner)
   while (!is_at_end(scanner)) {
     Token token = scan_token(scanner);
     if (token.type != TOKEN_UNKNOWN) {
-      print_token(token, scanner, token_count);
       tokens[token_count++] = token;
     }
   }
