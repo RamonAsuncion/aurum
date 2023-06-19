@@ -10,6 +10,8 @@
  * @brief Stack implementation.
  */
 
+#define DEFAULT_CAPACITY 16
+
 typedef struct {
     int *data;
     int top;
