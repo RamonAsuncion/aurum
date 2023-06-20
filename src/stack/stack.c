@@ -46,16 +46,16 @@ int top(Stack *stack)
 
 void dump(Stack *stack) 
 {
-  int stackSize = stack_size(stack);
+  int size = stack_size(stack);
 
   printf("+---------+---------+\n");
   printf("|  Index  |  Value  |\n");
   printf("+---------+---------+\n");
   
-  if (stackSize == 0) {
+  if (size == 0) {
     printf("|       Empty       |\n");
   } else {
-    for (int i = 0; i < stackSize; i++) {
+    for (int i = 0; i < size; i++) {
       printf("| %-7d | %-7d |\n", i, stack->data[i]);
     }
   }
