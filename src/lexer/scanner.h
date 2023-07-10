@@ -20,6 +20,7 @@ typedef struct {
   int start_column;
   int column;
   int line;
+  int position;
 } Scanner;
 
 /**

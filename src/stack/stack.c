@@ -1,11 +1,12 @@
 #include "stack.h"
 
-Stack *create_stack() 
+Stack *create_stack(void) 
 {
   Stack *stack = (Stack *)malloc(sizeof(Stack));
   stack->data = (int *)malloc(DEFAULT_CAPACITY * sizeof(int));
   stack->top = -1;
   stack->capacity = DEFAULT_CAPACITY;
+  stack->size = 0;
   return stack;
 }
 
@@ -21,6 +22,7 @@ void push(Stack *stack, int value)
     stack->capacity = new_capacity;
   }
   stack->top++;
+  stack->size++;
   stack->data[stack->top] = value;
 }
 
@@ -31,13 +33,9 @@ int pop(Stack *stack)
   }
   int popped_value = stack->data[stack->top];
   stack->top--;
+  stack->size--;
   return popped_value;
 }
-
-int stack_size(Stack *stack) 
-{
-  return stack->top + 1;
-} 
 
 int top(Stack *stack) 
 {
@@ -46,7 +44,7 @@ int top(Stack *stack)
 
 void dump(Stack *stack) 
 {
-  int size = stack_size(stack);
+  int size = stack->size;
 
   printf("+---------+---------+\n");
   printf("|  Index  |  Value  |\n");
@@ -63,3 +61,7 @@ void dump(Stack *stack)
   printf("+---------+---------+\n");
 }
 
+bool is_empty(Stack *stack) 
+{
+  return stack->size == 0;
+}

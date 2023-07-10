@@ -4,6 +4,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 /**
  * @file stack.h
@@ -16,13 +17,15 @@ typedef struct {
     int *data;
     int top;
     int capacity;
+    int size;
 } Stack;
+
 
 /**
  * @brief Creates a new stack with the given size.
  * @return A pointer to the newly created stack.
  */
-Stack *create_stack();
+Stack *create_stack(void);
 
 /**
  * @brief Pushes a value onto the stack.
@@ -39,13 +42,6 @@ void push(Stack *stack, int value);
 int pop(Stack *stack);
 
 /**
- * @brief Returns the size of the stack.
- * @param stack The stack to get the size of.
- * @return The size of the stack.
-  */
-int stack_size(Stack *stack);
-
-/**
  * @brief Returns the top value from the stack.
  * @param stack The stack to top the value from.
  * @return The value dropped from the stack.
@@ -57,5 +53,12 @@ int top(Stack *stack);
  * @param stack The stack to print.
 */
 void dump(Stack *stack);
+
+/**
+ * @brief Checks if the stack is empty.
+ * @param stack The stack to check.
+ * @return true if the stack is empty, false otherwise.
+*/
+bool is_empty(Stack *stack);
 
 #endif // _stack_h_

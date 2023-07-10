@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "scanner.h"
+#include "print_tokens.h"
 
 TrieNode *trie_node_create(TokenType type)
 {
@@ -24,7 +25,7 @@ void trie_insert(TrieNode *root, const char *keyword, TokenType type)
   node->type = type;
 }
 
-TrieNode *init_keyword_trie()
+TrieNode *init_keyword_trie(void)
 {
   TrieNode *root = trie_node_create(TOKEN_IDENTIFIER);
   trie_insert(root, "while", TOKEN_WHILE);
@@ -158,11 +159,16 @@ Token create_token(TokenType type, Scanner *scanner)
   return token;
 }
 
+void update_position(Scanner *scanner) {
+  scanner->position = scanner->current - scanner->source;
+}
+
 Token scan_token(Scanner *scanner)
 {
   skip_whitespace(scanner);
   scanner->start = scanner->current;
   scanner->start_column = scanner->column;
+  update_position(scanner);
   if (is_at_end(scanner)) return create_token(TOKEN_EOF, scanner);
 
   char c = advance(scanner);
@@ -248,9 +254,12 @@ void scan_tokens(Scanner *scanner)
   while (!is_at_end(scanner)) {
     Token token = scan_token(scanner);
     if (token.type != TOKEN_UNKNOWN) {
+      // print_token(token, scanner, token_count);
       tokens[token_count++] = token;
     }
+    printf("\n");
   }
 
   free(tokens);
 }
+
