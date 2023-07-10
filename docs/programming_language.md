@@ -29,6 +29,10 @@ The `parser` then takes this sequence of tokens produced by the **lexer** and ap
 
 The `interpreter` directory contains the implementation of the code execution phase of the interpreter. An interpreter is a program that translates a high-level programming language into machine code line by line during runtime.
 
+## Syntax
+
+The syntax of Aurum is inspired by Forth and Lua.
+
 ## Goal
 
 The end goal is to create a imperative, compiled, general-purpose, statically typed programming language.
