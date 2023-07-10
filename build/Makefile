@@ -25,7 +25,7 @@ interpreter_tests: ../tests/interpreter_tests.o ../src/interpreter/interpreter.o
 aurum_test: ../src/interpreter/main.o ../src/interpreter/interpreter.bak.o  ../src/lexer/lexer.o ../src/stack/stack.o ../src/memory/memory.o 
 	$(CC) $(LDFLAGS) $^ -o ../bin/$@
 
-aurum: ../src/interpreter/main.o ../src/interpreter/interpreter.o  ../src/lexer/lexer.o ../src/stack/stack.o ../src/memory/memory.o 
+aurum: ../src/interpreter/main.o ../src/interpreter/interpreter.o  ../src/lexer/lexer.o ../src/stack/stack.o ../src/memory/memory.o
 	$(CC) $(LDFLAGS) $^ -o ../bin/$@
 
 clean:
