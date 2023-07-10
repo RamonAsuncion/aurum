@@ -5,106 +5,101 @@
 #include "memory.h"
 
 Token token;
-Stack *stack;
 Scanner scanner;
 
-const char **loop_start_positions = NULL;
-size_t loop_start_positions_size = 0;
-bool *execute_loop_stack = NULL;
-size_t execute_loop_stack_size = 0;
+Stack *stack;
+
+Stack *loop_stack;
+Stack *end_stack;
+
 bool else_case_encountered = false;
+
 char *memory;
 
 void print_result(Stack *stack)
 {
-  if (stack_size(stack) > 0) {
+  if (stack->size > 0) {
     int result_str = pop(stack);
     printf("%d\n", result_str);
-  }
-  else {
+  } else {
     fprintf(stderr, "Empty stack.\n");
   }
 }
 
-void action_number()
+void action_number(void)
 {
   int value = atoi(token.lexeme);
   push(stack, value);
 }
 
-void action_add()
+void action_add(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a + b);
 }
 
-void action_subtract()
+void action_subtract(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a - b);
 }
 
-void action_multiply()
+void action_multiply(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a * b);
 }
 
-void action_divide()
+void action_divide(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a / b);
 }
 
-void action_print()
+void action_print(void)
 {
   print_result(stack);
 }
 
-void action_while() {
-    execute_loop_stack = realloc(execute_loop_stack, (execute_loop_stack_size + 1) * sizeof(bool));
-    execute_loop_stack[execute_loop_stack_size++] = true;
+int nested_loop = 0;
 
-    loop_start_positions = realloc(loop_start_positions, (loop_start_positions_size + 1) * sizeof(char *));
-    loop_start_positions[loop_start_positions_size++] = scanner.current;
+void action_while(void)
+{
+    if (top(loop_stack) != scanner.position)
+      push(loop_stack, scanner.position);
+
 }
 
-void action_then() {
-    if (pop(stack) == 0) {
-        execute_loop_stack[execute_loop_stack_size - 1] = false;
-    } else {
-        execute_loop_stack[execute_loop_stack_size - 1] = true;
+void action_then(void)
+{
+    int condition = pop(stack);
+    if (condition == 0) {
+        pop(loop_stack);  
+        scanner.position = pop(end_stack);
+        scanner.current = scanner.source + scanner.position + 3;
+        pop(stack);
     }
 }
 
-void action_end() {
-    int stack_top = pop(stack);
-
-    if (execute_loop_stack[execute_loop_stack_size - 1]) {
-        if (stack_top == 0) {
-            // Remove the current loop's state from execute_loop_stack
-            execute_loop_stack_size--;
-            loop_start_positions_size--;
-        } else {
-            // Keep the top value on the stack for the next iteration
-            push(stack, stack_top);
-            scanner.current = loop_start_positions[loop_start_positions_size - 1];
-        }
-    } else {
-        loop_start_positions_size--;
-        execute_loop_stack_size--;
-    }
+void action_end(void)
+{
+    int loop_start = pop(loop_stack);
+    if (top(stack) != scanner.position)
+      push(end_stack, scanner.position);
+    scanner.position = loop_start;
+    scanner.current = scanner.source + scanner.position;
 }
 
 // TODO: I don't think 3+ dup works.
-void action_dup() {
+void action_dup(void) 
+{
   int n = pop(stack);
 
-  if (n > 1 && stack_size(stack) >= n) {
+  if (n > 1 && stack->size >= n) {
     int *temp = (int *)malloc(n * sizeof(int));
 
     for (int i = 0; i < n; ++i) 
@@ -122,19 +117,19 @@ void action_dup() {
   }
 }
 
-void action_pop()
+void action_pop(void)
 {
   pop(stack);
 }
 
-void action_equal()
+void action_equal(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a == b);
 }
 
-void action_swap()
+void action_swap(void)
 {
   int b = pop(stack);
   int a = pop(stack);
@@ -142,7 +137,7 @@ void action_swap()
   push(stack, a);
 }
 
-void action_over()
+void action_over(void)
 {
   int b = pop(stack);
   int a = pop(stack);
@@ -151,7 +146,7 @@ void action_over()
   push(stack, a);
 }
 
-void action_rot()
+void action_rot(void)
 {
   int c = pop(stack);
   int b = pop(stack);
@@ -168,13 +163,13 @@ void action_rot()
  * Try to look at drop and pop from pandas and python... or anything else. 
 */
 
-void action_drop()
+void action_drop(void)
 {
   int a = pop(stack);
   push(stack, a);
 }
 
-void action_if()
+void action_if(void)
 {
   if (pop(stack) == 0) {
     int block_depth = 1;
@@ -195,7 +190,7 @@ void action_if()
   }
 }
 
-void action_else()
+void action_else(void)
 {
   if (!else_case_encountered) {
     int block_depth = 1;
@@ -210,7 +205,7 @@ void action_else()
   }
 }
 
-void action_store()
+void action_store(void)
 {
   char byte = pop(stack);
   uintptr_t addr = pop(stack);
@@ -218,7 +213,7 @@ void action_store()
   memory[addr] = byte & 0xFF;
 }
 
-void action_fetch()
+void action_fetch(void)
 {
   uintptr_t addr = pop(stack);
   char byte = memory[addr];
@@ -226,74 +221,88 @@ void action_fetch()
   push(stack, byte);
 }
 
-void action_memory()
+void action_memory(void)
 {
   push(stack, (intptr_t)memory);
 }
 
-void action_modulo()
+void action_modulo(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a % b);
 }
 
-void action_lt()
+void action_lt(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a < b);
 }
 
-void action_gt()
+void action_gt(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a > b);
 }
 
-void action_right_shift()
+void action_lte(void)
+{
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a <= b);
+}
+
+void action_gte(void)
+{
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a >= b);
+}
+
+void action_right_shift(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a >> b);
 }
 
-void action_left_shift()
+void action_left_shift(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a << b);
 }
 
-void action_bitwise_and()
+void action_bitwise_and(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a & b);
 }
 
-void action_bitwise_or()
+void action_bitwise_or(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a | b);
 }
 
-void action_bitwise_not()
+void action_bitwise_not(void)
 {
   int a = pop(stack);
   push(stack, ~a);
 }
 
-void action_bitwise_xor()
+void action_bitwise_xor(void)
 {
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a ^ b);
 }
 
-void action_syscall() 
+void action_syscall(void) 
 {
     int argument_count = pop(stack);
 
@@ -335,13 +344,13 @@ void action_syscall()
     }
 }
 
-void action_ascii() 
+void action_ascii(void) 
 {
   int value = pop(stack);
   // Check if the value is within the range of graphic characters (0x20 to 0x7E) including space.
   if (value >= 0x20 && value <= 0x7E) {
     printf("%c", value);
-  } else if (value == 0x0A) { // Check if the value is a newline character (FIXME: Temporary)
+  } else if (value == 0x0A) {
     printf("\n");
   } else {
     printf("?");
@@ -350,7 +359,7 @@ void action_ascii()
   push(stack, value);
 }
 
-void action_dump()
+void action_dump(void)
 {
   dump(stack);
 }
@@ -358,6 +367,8 @@ void action_dump()
 void run_interpreter(const char *source_code)
 {
   stack = create_stack();
+  loop_stack = create_stack();
+  end_stack = create_stack();
 
   init_scanner(&scanner, source_code);
   
@@ -370,7 +381,7 @@ void run_interpreter(const char *source_code)
 
   memset(memory, 0, MEMORY_CAPACITY * sizeof(char));
 
-  typedef void (*action_func_t)();
+  typedef void (*action_func_t)(void);
   action_func_t actions[] = {
       [TOKEN_NUMBER] = action_number,
       [TOKEN_ASCII] = action_ascii,
@@ -385,6 +396,8 @@ void run_interpreter(const char *source_code)
       [TOKEN_END] = action_end,
       [TOKEN_GREATER] = action_gt,
       [TOKEN_LESS] = action_lt,
+      [TOKEN_GREATER_EQUAL] = action_gte,
+      [TOKEN_LESS_EQUAL] = action_lte,
       [TOKEN_DUP] = action_dup,
       [TOKEN_POP] = action_pop,
       [TOKEN_EQUAL] = action_equal,
@@ -411,14 +424,13 @@ void run_interpreter(const char *source_code)
     action_func_t action = actions[token.type];
     if (action != NULL) {
       action();
-    }
-    else {
+    } else {
       fprintf(stderr, "Unknown token type: %u\n", token.type);
       exit(1);
     }
   }
   // Free the stack and its contents
-  while (stack_size(stack) > 0) {
+  while (stack->size > 0) {
     pop(stack);
   }
   free(stack);
