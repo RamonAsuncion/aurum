@@ -4,7 +4,7 @@ Reference: [Specification Language](https://en.wikipedia.org/wiki/Specification_
 
 ## Stack manipulation
 
-```
+```text
 dup   ( a -- a a )
 drop  ( a -- )
 swap  ( a b -- b a )
@@ -14,7 +14,7 @@ rot   ( a b c -- b c a )
 
 ## Arithmetic operators
 
-```
+```text
 +    ( a b -- a+b )
 -    ( a b -- a-b )
 *    ( a b -- a*b )
@@ -24,7 +24,7 @@ rot   ( a b c -- b c a )
 
 ## Comparison operators
 
-```
+```text
 =  ( a b -- a = b )
 <  ( a b -- a < b )
 >  ( a b -- a > b )
@@ -34,7 +34,7 @@ rot   ( a b c -- b c a )
 
 ## Bitwise operators
 
-```
+```text
 & ( a b -- a & b )
 |     ( a b -- ab )
 ~    ( a --~a )
@@ -42,17 +42,19 @@ rot   ( a b c -- b c a )
 << ( a b -- a << b )
 ```
 
-### Types (Future) 
+### Types (Future)
 
+```text
 int    ( -- int ) 64 bit signed integer
 bool   ( -- bool ) 64 bit floating point number
 float  ( -- float ) 1 bit boolean
 ptr    ( -- ptr ) 64 bit pointer
 addr   ( -- addr ) 64 bit address (address of the procedure)
+```
 
 ### Hello World (Future)
 
-```
+```text
 func main as void
   "Hello, World!\n" write
 end
@@ -64,12 +66,15 @@ end
 
 ### While Loop
 
+```text
 <starting-value> while <condition> then
   <op>
 end
+```
 
 ### If Statement
 
+```text
 <condition> if
   <statement>
 else <condition> then
@@ -77,24 +82,33 @@ else <condition> then
 else <condition> then
   <statement>
 end
+```
 
 ### Function Definition (Future)
 
+```text
 func <name> as <type>
   <statement>
 end
+```
 
 ### Require (Future)
 
+```text
 require <file.ah>
+```
 
 ### Constants (Future)
 
+```text
 final <name> end
+```
 
 ### Define (Future)
 
+```text
 define <name> as <value> end
+```
 
 example:
 
@@ -112,7 +126,8 @@ end
 
 ### Peek (Future)
 
+```text
 peek <name> as 
   <statement>
 end
-
+```
