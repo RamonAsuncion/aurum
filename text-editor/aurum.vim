@@ -29,7 +29,7 @@ highlight Normal ctermbg=235 guibg=#1c1b19
 highlight NonText ctermbg=235 guibg=#1c1b19
 
 " Control structures
-syn keyword aurumControlKeywords if then else while end
+syn keyword aurumControlKeywords if then else while end do
 highlight aurumControlKeywords ctermfg=196 guifg=#ff0000
 
 " Constants and built-in values

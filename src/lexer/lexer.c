@@ -53,6 +53,7 @@ TrieNode *init_keyword_trie(void)
   trie_insert(root, "systemcall", TOKEN_SYSCALL);
   trie_insert(root, "ascii", TOKEN_ASCII);
   trie_insert(root, "dump", TOKEN_DUMP);
+  trie_insert(root, "do", TOKEN_DO);
   return root;
 }
 

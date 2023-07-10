@@ -4,15 +4,16 @@
 #include "interpreter.h"
 #include "memory.h"
 
+
 Token token;
 Scanner scanner;
 
+/* Data stack */
 Stack *stack;
 
+/* Handle control flow */
 Stack *loop_stack;
 Stack *end_stack;
-
-bool else_case_encountered = false;
 
 char *memory;
 
@@ -65,33 +66,31 @@ void action_print(void)
   print_result(stack);
 }
 
-int nested_loop = 0;
-
 void action_while(void)
 {
-    if (top(loop_stack) != scanner.position)
-      push(loop_stack, scanner.position);
+  if (top(loop_stack) != scanner.position)
+    push(loop_stack, scanner.position);
 
 }
 
-void action_then(void)
+void action_do(void)
 {
-    int condition = pop(stack);
-    if (condition == 0) {
-        pop(loop_stack);  
-        scanner.position = pop(end_stack);
-        scanner.current = scanner.source + scanner.position + 3;
-        pop(stack);
-    }
+  int condition = pop(stack);
+  if (condition == 0) {
+      pop(loop_stack);  // pop the position of the while
+      scanner.position = pop(end_stack);
+      scanner.current = scanner.source + scanner.position + 3;
+      pop(stack);
+  }
 }
 
 void action_end(void)
 {
-    int loop_start = pop(loop_stack);
-    if (top(stack) != scanner.position)
-      push(end_stack, scanner.position);
-    scanner.position = loop_start;
-    scanner.current = scanner.source + scanner.position;
+  int loop_start = pop(loop_stack);
+  if (top(stack) != scanner.position)
+    push(end_stack, scanner.position);
+  scanner.position = loop_start;
+  scanner.current = scanner.source + scanner.position;
 }
 
 // TODO: I don't think 3+ dup works.
@@ -169,38 +168,39 @@ void action_drop(void)
   push(stack, a);
 }
 
-void action_if(void)
+void action_if(void) {}
+
+void action_then(void) 
 {
-  if (pop(stack) == 0) {
+  // Check the condition and continue the body if it is true. Otherwise, skip the body.
+  int condition = pop(stack);
+  if (condition == 0) {
     int block_depth = 1;
-    bool else_case_encountered = false;
     while (block_depth > 0) {
-        token = scan_token(&scanner);
-        if (token.type == TOKEN_IF) {
-            block_depth++;
-        } else if (token.type == TOKEN_ELSE && !else_case_encountered && block_depth == 1) {
-            else_case_encountered = true;
-            break;
-        } else if (token.type == TOKEN_END) {
-            block_depth--;
-        } else {
-            continue;
-        }
+      token = scan_token(&scanner);
+      if (token.type == TOKEN_IF) {
+          block_depth++;
+      } else if (token.type == TOKEN_ELSE && block_depth == 1) { // !else_case_encountered && block_depth == 1) {
+          break;
+      } else if (token.type == TOKEN_END) {
+          block_depth--;
+      } else {
+          continue;
+      }
     }
-  }
+  } 
 }
 
 void action_else(void)
 {
-  if (!else_case_encountered) {
-    int block_depth = 1;
-    while (block_depth > 0) {
-        token = scan_token(&scanner);
-        if (token.type == TOKEN_IF) {
-            block_depth++;
-        } else if (token.type == TOKEN_END) {
-            block_depth--;
-        }
+  // Skip the body if the condition is true. Otherwise, continue the body.
+  int block_depth = 1;
+  while (block_depth > 0) {
+    token = scan_token(&scanner);
+    if (token.type == TOKEN_IF) {
+        block_depth++;
+    } else if (token.type == TOKEN_END) {
+        block_depth--;
     }
   }
 }
@@ -209,7 +209,6 @@ void action_store(void)
 {
   char byte = pop(stack);
   uintptr_t addr = pop(stack);
-  // printf("Store: addr: %lu: byte: %c\n", addr, byte);
   memory[addr] = byte & 0xFF;
 }
 
@@ -217,7 +216,6 @@ void action_fetch(void)
 {
   uintptr_t addr = pop(stack);
   char byte = memory[addr];
-  // printf("Load: addr: %lu: byte: %c\n", addr, byte);
   push(stack, byte);
 }
 
@@ -393,6 +391,7 @@ void run_interpreter(const char *source_code)
       [TOKEN_PERIOD] = action_print,
       [TOKEN_WHILE] = action_while,
       [TOKEN_THEN] = action_then,
+      [TOKEN_DO] = action_do,
       [TOKEN_END] = action_end,
       [TOKEN_GREATER] = action_gt,
       [TOKEN_LESS] = action_lt,
@@ -405,6 +404,7 @@ void run_interpreter(const char *source_code)
       [TOKEN_OVER] = action_over,
       [TOKEN_ROT] = action_rot,
       [TOKEN_DROP] = action_drop,
+      /* I don't know what I'm going to do for now. The if statements need a revamp. */
       [TOKEN_IF] = action_if,
       [TOKEN_ELSE] = action_else,
       [TOKEN_STORE] = action_store,
