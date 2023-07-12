@@ -1,6 +1,6 @@
 " Language: aurum
 " Maintainer: Ramon Asuncion
-" Latest Revision: 18 June 2023
+" Latest Revision: 12 July 2023
 
 scriptencoding utf-8
 
@@ -37,7 +37,7 @@ syn keyword aurumConstants final true false
 highlight aurumConstants ctermfg=208 guifg=#ff8700
 
 " Stack manipulation
-syn keyword aurumStackKeywords dup swap roll over peek pop rot drop dump
+syn keyword aurumStackKeywords dup swap roll over peek rot drop dump 2drop 2dup 2swap 2over
 highlight aurumStackKeywords ctermfg=118 guifg=#87ff00
 
 " Memory operations
