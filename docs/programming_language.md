@@ -35,4 +35,4 @@ The syntax of Aurum is inspired by Forth and Lua.
 
 ## Goal
 
-The end goal is to create a imperative, compiled, general-purpose, statically typed programming language.
+The end goal is to create a imperative, interpreted, general-purpose, dynamically typed programming language.
