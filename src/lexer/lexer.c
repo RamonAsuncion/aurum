@@ -1,6 +1,5 @@
 #include "lexer.h"
 #include "scanner.h"
-#include "print_tokens.h"
 
 TrieNode *trie_node_create(TokenType type)
 {
@@ -35,18 +34,21 @@ TrieNode *init_keyword_trie(void)
   trie_insert(root, "true", TOKEN_TRUE);
   trie_insert(root, "false", TOKEN_FALSE);
   trie_insert(root, "dup", TOKEN_DUP);
+  trie_insert(root, "2dup", TOKEN_TWO_DUP);
   trie_insert(root, "swap", TOKEN_SWAP);
+  trie_insert(root, "2swap", TOKEN_TWO_SWAP);
   trie_insert(root, "roll", TOKEN_ROLL);
   trie_insert(root, "over", TOKEN_OVER);
+  trie_insert(root, "2over", TOKEN_TWO_OVER);
   trie_insert(root, "peek", TOKEN_PEEK);
   trie_insert(root, "memory", TOKEN_MEMORY);
   trie_insert(root, "write", TOKEN_WRITE);
   trie_insert(root, "read", TOKEN_READ);
   trie_insert(root, "store", TOKEN_STORE);
   trie_insert(root, "fetch", TOKEN_FETCH);
-  trie_insert(root, "pop", TOKEN_POP);
   trie_insert(root, "rot", TOKEN_ROT);
   trie_insert(root, "drop", TOKEN_DROP);
+  trie_insert(root, "2drop", TOKEN_TWO_DROP);
   trie_insert(root, "end", TOKEN_END);
   trie_insert(root, "then", TOKEN_THEN);
   trie_insert(root, "not", TOKEN_NOT_EQUAL);
@@ -181,14 +183,24 @@ Token scan_token(Scanner *scanner)
     case '\\': return create_token(TOKEN_ESCAPE_SEQUENCE, scanner);
     case '\n': return create_token(TOKEN_NEW_LINE, scanner);
     case '\r': return create_token(TOKEN_CARRIAGE_RETURN, scanner);
-    case '\'': return create_token(TOKEN_SINGLE_QUOTE, scanner);
-    case '"': return create_token(TOKEN_DOUBLE_QUOTE, scanner);
     case '=': return create_token(TOKEN_EQUAL, scanner);
     case '+': return create_token(TOKEN_ADD, scanner);
     case '-': return create_token(TOKEN_SUBTRACT, scanner);
     case '&': return create_token(TOKEN_BITWISE_AND, scanner);
     case '|':  return create_token(TOKEN_BITWISE_OR, scanner);
     case '.': return create_token(TOKEN_PERIOD, scanner);
+    case '"':
+      while (peek(scanner) != '"' && !is_at_end(scanner)) {
+        if (peek(scanner) == '\n') {
+          scanner->line++;
+        }
+        advance(scanner);
+      }
+      if (is_at_end(scanner)) {
+        return create_token(TOKEN_UNKNOWN, scanner);
+      }
+      advance(scanner);
+      return create_token(TOKEN_STRING_LITERAL, scanner);
     case '>':
       if (match(scanner, '=')) {
         return create_token(TOKEN_GREATER_EQUAL, scanner);
@@ -235,32 +247,21 @@ Token scan_token(Scanner *scanner)
       }
     default:
       if (isdigit(c)) {
-        while (isdigit(peek(scanner))) advance(scanner);
-        return create_token(TOKEN_NUMBER, scanner);
+          while (isdigit(peek(scanner))) advance(scanner);
+          if (isalpha(peek(scanner))) {
+              while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
+              TokenType type = check_keyword(scanner);
+              return create_token(type, scanner);
+          } else {
+              return create_token(TOKEN_NUMBER, scanner);
+          }
       } else if (isalpha(c) || c == '_') {
-        while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
-        TokenType type = check_keyword(scanner);
-        return create_token(type, scanner);
+          while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
+          TokenType type = check_keyword(scanner);
+          return create_token(type, scanner);
       } else {
-        return create_token(TOKEN_UNKNOWN, scanner);
+          return create_token(TOKEN_UNKNOWN, scanner);
       }
   }
-}
-
-void scan_tokens(Scanner *scanner)
-{
-  Token *tokens = malloc(256 * sizeof(Token));
-  int token_count = 0;
-
-  while (!is_at_end(scanner)) {
-    Token token = scan_token(scanner);
-    if (token.type != TOKEN_UNKNOWN) {
-      // print_token(token, scanner, token_count);
-      tokens[token_count++] = token;
-    }
-    printf("\n");
-  }
-
-  free(tokens);
 }
 

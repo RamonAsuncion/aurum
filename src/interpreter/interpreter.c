@@ -4,6 +4,7 @@
 #include "interpreter.h"
 #include "memory.h"
 
+#define ASCII_MAX_SIZE 100
 
 Token token;
 Scanner scanner;
@@ -79,6 +80,7 @@ void action_do(void)
   if (condition == 0) {
       pop(loop_stack);  // pop the position of the while
       scanner.position = pop(end_stack);
+      // TODO: This should not be from the beginning of the source code.
       scanner.current = scanner.source + scanner.position + 3;
       pop(stack);
   }
@@ -93,31 +95,31 @@ void action_end(void)
   scanner.current = scanner.source + scanner.position;
 }
 
-// TODO: I don't think 3+ dup works.
 void action_dup(void) 
 {
-  int n = pop(stack);
-
-  if (n > 1 && stack->size >= n) {
-    int *temp = (int *)malloc(n * sizeof(int));
-
-    for (int i = 0; i < n; ++i) 
-      temp[i] = pop(stack);
-  
-
-    for (int j = 0; j < 2; ++j) 
-      for (int i = n - 1; i >= 0; --i) 
-          push(stack, temp[i]);
-
-    free(temp);
-  } else {
-    push(stack, n);
-    push(stack, n);
-  }
+  int a = pop(stack);
+  push(stack, a);
+  push(stack, a);
 }
 
-void action_pop(void)
+void action_two_dup(void)
 {
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a);
+  push(stack, b);
+  push(stack, a);
+  push(stack, b);
+}
+
+void action_drop(void)
+{
+  pop(stack);
+}
+
+void action_two_drop(void)
+{
+  pop(stack);
   pop(stack);
 }
 
@@ -136,6 +138,18 @@ void action_swap(void)
   push(stack, a);
 }
 
+void action_two_swap(void)
+{
+  int d = pop(stack);
+  int c = pop(stack);
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, c);
+  push(stack, d);
+  push(stack, a);
+  push(stack, b);
+}
+
 void action_over(void)
 {
   int b = pop(stack);
@@ -143,6 +157,19 @@ void action_over(void)
   push(stack, a);
   push(stack, b);
   push(stack, a);
+}
+
+void action_two_over(void)
+{
+  int c = pop(stack);
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a);
+  push(stack, b);
+  push(stack, c);
+  push(stack, a);
+  push(stack, b);
+  push(stack, c);
 }
 
 void action_rot(void)
@@ -162,7 +189,7 @@ void action_rot(void)
  * Try to look at drop and pop from pandas and python... or anything else. 
 */
 
-void action_drop(void)
+void action_peek(void)
 {
   int a = pop(stack);
   push(stack, a);
@@ -342,25 +369,75 @@ void action_syscall(void)
     }
 }
 
-void action_ascii(void) 
-{
-  int value = pop(stack);
-  // Check if the value is within the range of graphic characters (0x20 to 0x7E) including space.
-  if (value >= 0x20 && value <= 0x7E) {
-    printf("%c", value);
-  } else if (value == 0x0A) {
-    printf("\n");
-  } else {
-    printf("?");
-  }
+void action_ascii(void) {
+    int value;
+    int i = 0;
+    char buffer[ASCII_MAX_SIZE];
+    int length = pop(stack);
+    
+    for(int count = 0; count < length; count++) {
+        value = pop(stack);
+        if(value >= 0x20 && value <= 0x7E) {
+            buffer[i++] = (char) value;
+        } else if(value == 0x0A) {
+            buffer[i++] = '\n';
+        } else {
+            buffer[i++] = '?';
+        }
+    }
 
-  push(stack, value);
+    // Reverse the buffer and print the characters
+    for(int j = i - 1; j >= 0; j--) {
+        printf("%c", buffer[j]);
+    }
 }
 
 void action_dump(void)
 {
   dump(stack);
 }
+
+void action_string_literal(void)
+{
+  int memory_index = 0;
+  int string_length = strlen(token.lexeme);
+  char* string = malloc((string_length + 1) * sizeof(char));
+  strcpy(string, token.lexeme);
+
+  // Remove the quotes from the string literal
+  char* literal = string + 1;
+  literal[string_length - 2] = '\0';
+
+  // Store the characters in memory
+  int literal_length = strlen(literal);
+  for (int i = 0; i < literal_length; ++i) {
+    if (literal[i] == '\\') {
+      // Handle escape sequences
+      switch (literal[i + 1]) {
+        case 'n': // Newline character
+          printf("\n");
+          i++; // Skip the next character ('\n')
+          break;
+        case 't': // Tab character
+          printf("\t");
+          i++; // Skip the next character ('\t')
+          break;
+        default: // Treat other characters as regular characters
+          putchar(literal[i]);
+          break;
+      }
+    } else {
+      putchar(literal[i]);
+    }
+  }
+
+  push(stack, literal_length);
+  push(stack, memory_index - literal_length);
+
+  free(string); // Free the allocated memory for the string
+}
+
+
 
 void run_interpreter(const char *source_code)
 {
@@ -398,12 +475,16 @@ void run_interpreter(const char *source_code)
       [TOKEN_GREATER_EQUAL] = action_gte,
       [TOKEN_LESS_EQUAL] = action_lte,
       [TOKEN_DUP] = action_dup,
-      [TOKEN_POP] = action_pop,
+      [TOKEN_TWO_DUP] = action_two_dup,
+      [TOKEN_DROP] = action_drop,
+      [TOKEN_TWO_DROP] = action_two_drop,
       [TOKEN_EQUAL] = action_equal,
       [TOKEN_SWAP] = action_swap,
+      [TOKEN_TWO_SWAP] = action_two_swap,
       [TOKEN_OVER] = action_over,
+      [TOKEN_TWO_OVER] = action_two_over,
       [TOKEN_ROT] = action_rot,
-      [TOKEN_DROP] = action_drop,
+      [TOKEN_PEEK] = action_peek,
       /* I don't know what I'm going to do for now. The if statements need a revamp. */
       [TOKEN_IF] = action_if,
       [TOKEN_ELSE] = action_else,
@@ -418,6 +499,7 @@ void run_interpreter(const char *source_code)
       [TOKEN_BITWISE_XOR] = action_bitwise_xor,
       [TOKEN_SYSCALL] = action_syscall,
       [TOKEN_DUMP] = action_dump,
+      [TOKEN_STRING_LITERAL] = action_string_literal,
   };
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
@@ -425,7 +507,7 @@ void run_interpreter(const char *source_code)
     if (action != NULL) {
       action();
     } else {
-      fprintf(stderr, "Unknown token type: %u\n", token.type);
+      fprintf(stderr, "Unknown token type: %d\n", token.type);
       exit(1);
     }
   }
@@ -433,6 +515,7 @@ void run_interpreter(const char *source_code)
   while (stack->size > 0) {
     pop(stack);
   }
+
   free(stack);
   free(memory);
 }
