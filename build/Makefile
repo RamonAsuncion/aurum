@@ -10,7 +10,7 @@ all: $(EXES) $(INTERPRETER)
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $< -o $@
 
-lexer_tests: ../tests/lexer_tests.o ../src/lexer/lexer.o
+lexer_tests: ../tests/lexer_tests.o ../src/lexer/lexer.o ../src/lexer/print_tokens.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 parser_tests: ../tests/parser_tests.o ../src/parser/parser.o ../src/lexer/lexer.o ../src/ast/ast.o
