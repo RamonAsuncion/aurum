@@ -9,7 +9,7 @@
 #define SYS_WRITE 1
 #define SYS_EXIT 60
 
-#define MEMORY_CAPACITY (1024 * 1024 * 1024)
+#define MEMORY_CAPACITY (250 * 1024 * 1024)
 
 void print_memory(char *memory, int size);
 

@@ -68,7 +68,8 @@ typedef enum {
   TOKEN_SYSCALL,
   TOKEN_ASCII,
   TOKEN_DUMP,
-  TOKEN_DO
+  TOKEN_DO,
+  TOKEN_DEFINE
 } TokenType;
 
 /**
