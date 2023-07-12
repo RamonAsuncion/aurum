@@ -7,28 +7,28 @@
 void test_stack(void) {
     Stack *stack = create_stack();
 
-    assert(stack_size(stack) == 0);
+    assert(stack->size == 0);
 
     push(stack, 5);
-    assert(stack_size(stack) == 1);
+    assert(stack->size == 1);
 
     push(stack, 8);
-    assert(stack_size(stack) == 2);
+    assert(stack->size == 2);
 
     push(stack, 42);
-    assert(stack_size(stack) == 3);
+    assert(stack->size == 3);
 
     int popped_value = pop(stack);
     assert(popped_value == 42);
-    assert(stack_size(stack) == 2);
+    assert(stack->size == 2);
 
     popped_value = pop(stack);
     assert(popped_value == 8);
-    assert(stack_size(stack) == 1);
+    assert(stack->size == 1);
 
     popped_value = pop(stack);
     assert(popped_value == 5);
-    assert(stack_size(stack) == 0);
+    assert(stack->size == 0);
 
     // This will cause an underflow error.
     assert(pop(stack) == -1);
