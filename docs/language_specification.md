@@ -15,31 +15,32 @@ rot   ( a b c -- b c a )
 ## Arithmetic operators
 
 ```text
-+    ( a b -- a+b )
--    ( a b -- a-b )
-*    ( a b -- a*b )
-/    ( a b -- a/b )
-%    ( a b -- a%b )
++  ( a b -- a+b )
+-  ( a b -- a-b )
+*  ( a b -- a*b )
+/  ( a b -- a/b )
+%  ( a b -- a%b )
 ```
 
 ## Comparison operators
 
 ```text
-=  ( a b -- a = b )
-<  ( a b -- a < b )
->  ( a b -- a > b )
-<= ( a b -- a <= b )
->= ( a b -- a >= b )
+=   ( a b -- a = b )
+<   ( a b -- a < b )
+>   ( a b -- a > b )
+<=  ( a b -- a <= b )
+>=  ( a b -- a >= b )
 ```
 
 ## Bitwise operators
 
 ```text
-& ( a b -- a & b )
-|     ( a b -- ab )
-~    ( a --~a )
->> ( a b -- a >> b )
-<< ( a b -- a << b )
+&   ( a b -- a & b )
+|   ( a b -- ab )
+~   ( a -- ~a )
+^   ( a b -- a ^ b )
+>>  ( a b -- a >> b )
+<<  ( a b -- a << b )
 ```
 
 ### Types (Future)
@@ -124,10 +125,3 @@ end
   This is also a comment.
 */
 
-### Peek (Future)
-
-```text
-peek <name> as 
-  <statement>
-end
-```
