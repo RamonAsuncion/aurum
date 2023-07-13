@@ -505,7 +505,13 @@ void action_include(void)
 
   // Read the file into a buffer
   char* buffer = malloc(file_size + 1);
-  fread(buffer, sizeof(char), file_size, file);
+  int fread_code = fread(buffer, sizeof(char), file_size, file);
+
+  if (fread_code != file_size) {
+    fprintf(stderr, "Could not read file into buffer: %s\n", cleaned_filename);
+    exit(1);
+  }
+
   buffer[file_size] = '\0';
 
   // Close the file

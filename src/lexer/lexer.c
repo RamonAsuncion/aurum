@@ -122,7 +122,7 @@ char advance(Scanner *scanner)
 char* get_token(Scanner *scanner) {
   size_t length = (size_t)(scanner->current - scanner->start);
   char *lexeme = (char *)malloc(length + 1);
-  strncpy(lexeme, scanner->start, length);
+  memcpy(lexeme, scanner->start, length);
   lexeme[length] = '\0';
   return lexeme;
 }
@@ -168,7 +168,7 @@ Token create_token(TokenType type, Scanner *scanner)
 
   size_t length = (size_t)(scanner->current - scanner->start);
   char *lexeme = (char *)malloc(length + 1);
-  strncpy(lexeme, scanner->start, length);
+  memcpy(lexeme, scanner->start, length);
   lexeme[length] = '\0';
 
   token.lexeme = lexeme;

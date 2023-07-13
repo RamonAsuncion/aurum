@@ -22,4 +22,6 @@ Without the following resources, this project would not have been possible:
 
 10. [Forth Keywords](http://lars.nocrew.org/forth2012/core.html)
 
-11. [Forth Stack Operations](https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/)
+11. [Forth Stack Operations](https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/)  
+
+12. [Tsoding Daily](https://www.youtube.com/@TsodingDaily) Tsoding has a great series on making his own concatenative programming language.
