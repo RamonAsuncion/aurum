@@ -61,6 +61,10 @@ Macro* hashmap_get(HashMap* map, const char* key);
 */
 void hashmap_free(HashMap* map);
 
-void print_hashmap(HashMap* map);
+/**
+ * @brief Prints the hashmap
+ * @param map The hashmap to print
+*/
+void hashmap_print(HashMap* map);
 
 #endif

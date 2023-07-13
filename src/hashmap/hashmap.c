@@ -60,7 +60,7 @@ void hashmap_free(HashMap* map) {
   free(map);
 }
 
-void print_hashmap(HashMap* map) {
+void hashmap_print(HashMap* map) {
   for (int i = 0; i < map->capacity; i++) {
     if (map->entries[i] != NULL) {
       printf("Macro: %s\n", map->entries[i]->key);
