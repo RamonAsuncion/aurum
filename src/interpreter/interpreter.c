@@ -3,20 +3,19 @@
 #include "stack.h"
 #include "interpreter.h"
 #include "memory.h"
+#include "hashmap.h"
 
 #define ASCII_MAX_SIZE 100
 
-Token token;
-Scanner scanner;
-
-/* Data stack */
-Stack *stack;
-
-/* Handle control flow */
-Stack *loop_stack;
-Stack *end_stack;
-
-char memory[MEMORY_CAPACITY];
+static Token token;
+static Scanner scanner;
+static Stack *stack;
+static Stack *loop_stack;
+static Stack *end_stack;
+HashMap* hashmap; 
+static char memory[MEMORY_CAPACITY];
+typedef void (*action_func_t)(void);
+action_func_t* actions;
 
 void print_result(Stack *stack)
 {
@@ -30,6 +29,10 @@ void print_result(Stack *stack)
 
 void action_number(void)
 {
+  if (token.type == TOKEN_CHAR) {
+    push(stack, token.lexeme[0]);
+    return;
+  }
   int value = atoi(token.lexeme);
   push(stack, value);
 }
@@ -389,7 +392,6 @@ void action_dump(void)
   dump(stack);
 }
 
-// This sometimes work with the memory that's allocated. Problem like the memory.au.
 void action_string_literal(void)
 {
   int memory_index = 0;
@@ -432,28 +434,131 @@ void action_string_literal(void)
   free(string); // Free the allocated memory for the string
 }
 
-// Adding macros to the language.
 void action_define(void)
 {
   // Grab the name of the macro.
   Token macro_name = scan_token(&scanner); // Save the first token as macro_name
-
   Token* macros = malloc(sizeof(Token) * 100);
   int i = 0;
   Token token = scan_token(&scanner); // Start scanning tokens after the macro_name
+  int num_tokens = 0;
   while (token.type != TOKEN_END) {
     macros[i++] = token;
     token = scan_token(&scanner);
+    num_tokens++;
   }
   macros[i] = token;
 
-  for (int j = 0; j < i; ++j) {
-    printf("token: %s\n", macros[j].lexeme);
-  }
-
-  printf("macro_name: %s\n", macro_name.lexeme);
+  // Insert the macro into the hashmap
+  hashmap_insert(hashmap, macro_name.lexeme, macros, num_tokens);  
 
   free(macros);
+}
+
+void action_macro(void)
+{
+  // Get the macro name from the current token
+  const char* macro_name = token.lexeme;
+
+  // Get the macro from the hashmap
+  Macro* macro = hashmap_get(hashmap, macro_name);
+
+  // Push the tokens onto the stack
+  for (int i = 0; i < macro->numTokens; i++) {
+    if (isdigit(macro->tokens[i].lexeme[0])) {
+      push(stack, atoi(macro->tokens[i].lexeme));
+    } else {
+      // Call the appropriate action function based on the token's type
+      action_func_t action = actions[macro->tokens[i].type];
+      if (action != NULL) {
+        action();
+      } else {
+        fprintf(stderr, "Unknown token type: %d\n", macro->tokens[i].type);
+        exit(1);
+      }
+    }
+  }
+}
+
+void action_include(void) 
+{
+  // Get the filename from the current token
+  const char* filename = scan_token(&scanner).lexeme;
+
+  // Remove the quotes from the filename
+  size_t filename_length = strlen(filename);
+  char* cleaned_filename = malloc(filename_length - 1);
+  strncpy(cleaned_filename, filename + 1, filename_length - 2);
+  cleaned_filename[filename_length - 2] = '\0';
+
+  // Open the file
+  FILE* file = fopen(cleaned_filename, "r");
+  if (file == NULL) {
+    fprintf(stderr, "Could not open file: %s\n", cleaned_filename);
+    exit(1);
+  }
+
+  // Get the size of the file
+  fseek(file, 0L, SEEK_END);
+  int file_size = ftell(file);
+  rewind(file);
+
+  // Read the file into a buffer
+  char* buffer = malloc(file_size + 1);
+  fread(buffer, sizeof(char), file_size, file);
+  buffer[file_size] = '\0';
+
+  // Close the file
+  fclose(file);
+
+  // Remove line breaks and add a space at the end of each line
+  for (int i = 0; i < file_size; i++) {
+    if (buffer[i] == '\n') {
+      buffer[i] = ' ';
+    }
+  }
+  buffer[file_size] = ' '; // Add a space at the end
+  memmove(buffer + 1, buffer, file_size); // Shift the buffer to make space for the space at the beginning
+  buffer[0] = ' '; // Add a space at the beginning
+
+  // Calculate the position for the buffer
+  int position = scanner.position + strlen(cleaned_filename) + 2;
+
+  // Create a new source string with the buffer inserted after the current token
+  char* new_source = malloc(strlen(scanner.source) + strlen(buffer) + 1);
+  strncpy(new_source, scanner.source, position);
+  strcat(new_source, buffer);
+  strcat(new_source, scanner.source + position);
+
+  // Update the scanner with the new source and position
+  scanner.source = new_source;
+  scanner.current = scanner.source + position;
+
+  // Free the buffer
+  free(buffer);
+
+  // Free the cleaned filename
+  free(cleaned_filename);
+}
+
+void action_and(void)
+{
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a && b);
+}
+
+void action_or(void)
+{
+  int b = pop(stack);
+  int a = pop(stack);
+  push(stack, a || b);
+}
+
+void action_not(void)
+{
+  int a = pop(stack);
+  push(stack, !a);
 }
 
 void run_interpreter(const char *source_code)
@@ -461,11 +566,11 @@ void run_interpreter(const char *source_code)
   stack = create_stack();
   loop_stack = create_stack();
   end_stack = create_stack();
+  hashmap = hashmap_create();
 
   init_scanner(&scanner, source_code);
 
-  typedef void (*action_func_t)(void);
-  action_func_t actions[] = {
+  actions = (action_func_t[]){
     [TOKEN_NUMBER] = action_number,
     [TOKEN_ASCII] = action_ascii,
     [TOKEN_ADD] = action_add,
@@ -493,8 +598,7 @@ void run_interpreter(const char *source_code)
     [TOKEN_TWO_OVER] = action_two_over,
     [TOKEN_ROT] = action_rot,
     [TOKEN_PEEK] = action_peek,
-    /* I don't know what I'm going to do for now. The if statements need a revamp. */
-    [TOKEN_IF] = action_if,
+    [TOKEN_IF] = action_if,     /* I don't know what I'm going to do for now. The if statements need a revamp. */
     [TOKEN_ELSE] = action_else,
     [TOKEN_STORE] = action_store,
     [TOKEN_FETCH] = action_fetch,
@@ -508,7 +612,13 @@ void run_interpreter(const char *source_code)
     [TOKEN_SYSCALL] = action_syscall,
     [TOKEN_DUMP] = action_dump,
     [TOKEN_STRING_LITERAL] = action_string_literal,
+    [TOKEN_CHAR] = action_number,
     [TOKEN_DEFINE] = action_define,
+    [TOKEN_MACRO] = action_macro,
+    [TOKEN_INCLUDE] = action_include,
+    [TOKEN_AND] = action_and,
+    [TOKEN_OR] = action_or,
+    [TOKEN_NOT] = action_not,
   };
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
@@ -516,7 +626,7 @@ void run_interpreter(const char *source_code)
     if (action != NULL) {
       action();
     } else {
-      fprintf(stderr, "Unknown token type: %d\n", token.type);
+      fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n", scanner.line, scanner.column, token.lexeme);
       exit(1);
     }
   }
@@ -528,4 +638,5 @@ void run_interpreter(const char *source_code)
   free(loop_stack);
   free(end_stack);
   free(stack);
+  hashmap_free(hashmap);
 }

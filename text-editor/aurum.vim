@@ -20,7 +20,7 @@ endif
 
 set background=dark
 
-set iskeyword=a-z,A-Z,-,*,_,!,@
+set iskeyword=@,48-57,192-255 
 syn keyword aurumTodos TODO XXX FIXME NOTE
 highlight aurumTodos ctermfg=202 guibg=#FF5F00
 
@@ -29,11 +29,11 @@ highlight Normal ctermbg=235 guibg=#1c1b19
 highlight NonText ctermbg=235 guibg=#1c1b19
 
 " Control structures
-syn keyword aurumControlKeywords if then else while end do
+syn keyword aurumControlKeywords if then else while end do define
 highlight aurumControlKeywords ctermfg=196 guifg=#ff0000
 
 " Constants and built-in values
-syn keyword aurumConstants final true false
+syn keyword aurumConstants final include
 highlight aurumConstants ctermfg=208 guifg=#ff8700
 
 " Stack manipulation
@@ -41,11 +41,11 @@ syn keyword aurumStackKeywords dup swap roll over peek rot drop dump 2drop 2dup 
 highlight aurumStackKeywords ctermfg=118 guifg=#87ff00
 
 " Memory operations
-syn keyword aurumMemoryKeywords memory write read store fetch
+syn keyword aurumMemoryKeywords memory write read store fetch 
 highlight aurumMemoryKeywords ctermfg=81 guifg=#00afff
 
 " Misc keywords
-syn keyword aurumMiscKeywords break not systemcall ascii
+syn keyword aurumMiscKeywords systemcall ascii
 highlight aurumMiscKeywords ctermfg=220 guifg=#ffd700
 
 " Comments

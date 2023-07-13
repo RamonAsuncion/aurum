@@ -81,10 +81,4 @@ Token create_token(TokenType type, Scanner *scanner);
  */
 Token scan_token(Scanner *scanner);
 
-/**
- * @brief Scan all tokens from the source code.
- * @param scanner Pointer to the scanner structure.
- */
-void scan_tokens(Scanner *scanner);
-
 #endif // _scanner_h_

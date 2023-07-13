@@ -1,5 +1,7 @@
 #include "lexer.h"
 #include "scanner.h"
+#include "print_tokens.h"
+#include "hashmap.h"
 
 TrieNode *trie_node_create(TokenType type)
 {
@@ -57,6 +59,10 @@ TrieNode *init_keyword_trie(void)
   trie_insert(root, "dump", TOKEN_DUMP);
   trie_insert(root, "do", TOKEN_DO);
   trie_insert(root, "define", TOKEN_DEFINE);
+  trie_insert(root, "include", TOKEN_INCLUDE);
+  trie_insert(root, "and", TOKEN_AND);
+  trie_insert(root, "or", TOKEN_OR);
+  trie_insert(root, "not", TOKEN_NOT);
   return root;
 }
 
@@ -78,7 +84,6 @@ TokenType trie_search(TrieNode *root, Scanner *scanner) {
 
   return TOKEN_IDENTIFIER;
 }
-
 
 TokenType check_keyword(Scanner *scanner)
 {
@@ -112,6 +117,14 @@ char advance(Scanner *scanner)
     scanner->column = 1;
   }
   return *scanner->current++;
+}
+
+char* get_token(Scanner *scanner) {
+  size_t length = (size_t)(scanner->current - scanner->start);
+  char *lexeme = (char *)malloc(length + 1);
+  strncpy(lexeme, scanner->start, length);
+  lexeme[length] = '\0';
+  return lexeme;
 }
 
 char peek(Scanner *scanner)
@@ -202,6 +215,18 @@ Token scan_token(Scanner *scanner)
       }
       advance(scanner);
       return create_token(TOKEN_STRING_LITERAL, scanner);
+    case '\'':
+      while (peek(scanner) != '\'' && !is_at_end(scanner)) {
+        if (peek(scanner) == '\n') {
+          scanner->line++;
+        }
+        advance(scanner);
+      }
+      if (is_at_end(scanner)) {
+        return create_token(TOKEN_UNKNOWN, scanner);
+      }
+      advance(scanner);
+      return create_token(TOKEN_CHAR, scanner);
     case '>':
       if (match(scanner, '=')) {
         return create_token(TOKEN_GREATER_EQUAL, scanner);
@@ -259,10 +284,16 @@ Token scan_token(Scanner *scanner)
       } else if (isalpha(c) || c == '_') {
           while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
           TokenType type = check_keyword(scanner);
+          // Tokenize existing macros
+          if (type == TOKEN_IDENTIFIER) {
+            Macro *macro = hashmap_get(hashmap, get_token(scanner));
+            if (macro != NULL) {
+              return create_token(TOKEN_MACRO, scanner);
+            }
+          }
           return create_token(type, scanner);
       } else {
           return create_token(TOKEN_UNKNOWN, scanner);
       }
   }
 }
-
