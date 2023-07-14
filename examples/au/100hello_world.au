@@ -1,0 +1,7 @@
+define print 1 1 3 systemcall end
+
+100 while dup 0 > do
+  1 - 
+  "Hello, World!\n" print  
+  drop // removes return value 
+end

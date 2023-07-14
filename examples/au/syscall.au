@@ -1,0 +1,6 @@
+3 // count
+memory // buffer
+1 // fd
+1 // syscall number
+3 // amount of arguments of the syscall 
+systemcall

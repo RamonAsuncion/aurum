@@ -1,0 +1,5 @@
+1 dup
+dump 2drop
+
+1 2 2dup
+dump

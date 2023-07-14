@@ -1,0 +1,9 @@
+2 while dup 0 >= do 
+  4 while dup 1 >= do 
+      dup . 
+      1 -
+  end 
+  1 - 
+end
+dump
+
