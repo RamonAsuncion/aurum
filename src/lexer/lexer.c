@@ -60,9 +60,7 @@ TrieNode *init_keyword_trie(void)
   trie_insert(root, "do", TOKEN_DO);
   trie_insert(root, "define", TOKEN_DEFINE);
   trie_insert(root, "include", TOKEN_INCLUDE);
-  trie_insert(root, "and", TOKEN_AND);
-  trie_insert(root, "or", TOKEN_OR);
-  trie_insert(root, "not", TOKEN_NOT);
+  trie_insert(root, "divmod", TOKEN_DIVIDE_MODULO);
   return root;
 }
 
@@ -191,7 +189,6 @@ Token scan_token(Scanner *scanner)
   char c = advance(scanner);
   switch (c) {
     case '*': return create_token(TOKEN_MULTIPLY, scanner);
-    case '%': return create_token(TOKEN_MODULO, scanner);
     case '~': return create_token(TOKEN_BITWISE_NOT, scanner);
     case '^': return create_token(TOKEN_BITWISE_XOR, scanner);
     case '\\': return create_token(TOKEN_ESCAPE_SEQUENCE, scanner);
@@ -269,7 +266,7 @@ Token scan_token(Scanner *scanner)
           // Recursively get the next token after the comment
           return scan_token(scanner);
       } else {
-          return create_token(TOKEN_DIVIDE, scanner);
+          return create_token(TOKEN_UNKNOWN, scanner);
       }
     default:
       if (isdigit(c)) {

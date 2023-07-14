@@ -15,17 +15,25 @@ I wanted to learn how to create a programming language from scratch. I was going
 
 The `bin/` directory is used to store the executable files for my interpreter.
 
+The `lib/` is the standard library for Aurum.
+
+The `src/` directory contains the source code for the interpreter.
+
+The `tests/` directory contains the test files for the interpreter.
+
+The `docs/` directory contains the documentation for the interpreter.
+
 ## Plan
 
 - [x] Part 1: Lexer
-- [ ] Part 2: Interpreter
-- [ ] Part 3: Parser
+- [x] Part 2: Interpreter
+- [ ] Part 3: Standard Library
+- [ ] Part 4: Documentation
+- [ ] Part 5: Tests
 
 ## Definitions
 
 The `lexer` is responsible for taking the source code of a program as input and breaking it down into a sequence of tokens, which are meaningful units of the programming language such as keywords, identifiers, operators, and literals.
-
-The `parser` then takes this sequence of tokens produced by the **lexer** and applies a grammar to it, which defines the structure and syntax of the programming language. The parser verifies that the input program is syntactically correct according to the grammar and produces a parse tree or an **abstract syntax tree** (AST) as output.
 
 The `interpreter` directory contains the implementation of the code execution phase of the interpreter. An interpreter is a program that translates a high-level programming language into machine code line by line during runtime.
 

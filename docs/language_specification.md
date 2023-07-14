@@ -47,28 +47,13 @@ rot   ( a b c -- b c a )
 
 ```text
 int    ( -- int ) 64 bit signed integer
-bool   ( -- bool ) 64 bit floating point number
-float  ( -- float ) 1 bit boolean
-ptr    ( -- ptr ) 64 bit pointer
-addr   ( -- addr ) 64 bit address (address of the procedure)
-```
-
-### Hello World (Future)
-
-```text
-func main as void
-  "Hello, World!\n" write
-end
-
-func main as 
-  "Hello, World!\n" write
-end
+bool   ( -- bool ) 8 bit boolean
 ```
 
 ### While Loop
 
 ```text
-<starting-value> while <condition> then
+<starting-value> while <condition> do
   <op>
 end
 ```
@@ -76,46 +61,32 @@ end
 ### If Statement
 
 ```text
-<condition> if
+if <condition> then
   <statement>
-else <condition> then
+elseif <condition> then
   <statement>
-else <condition> then
-  <statement>
-end
-```
-
-### Function Definition (Future)
-
-```text
-func <name> as <type>
+elseif <condition> then
   <statement>
 end
 ```
 
-### Require (Future)
+### Include directive
 
 ```text
-require <file.ah>
+include <file.ah>
 ```
 
 ### Constants (Future)
 
 ```text
-final <name> end
+final <name> <value> end
 ```
 
-### Define (Future)
+### Macros
 
 ```text
-define <name> as <value> end
+define <name> <value> end
 ```
-
-example:
-
-define pi as 3.14
-  pi write
-end
 
 ### Comments
 
@@ -124,4 +95,3 @@ end
 /*
   This is also a comment.
 */
-

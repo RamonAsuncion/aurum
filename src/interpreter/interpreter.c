@@ -4,6 +4,7 @@
 #include "interpreter.h"
 #include "memory.h"
 #include "hashmap.h"
+#include "math.h"
 
 #define ASCII_MAX_SIZE 100
 
@@ -56,13 +57,6 @@ void action_multiply(void)
   int b = pop(stack);
   int a = pop(stack);
   push(stack, a * b);
-}
-
-void action_divide(void)
-{
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a / b);
 }
 
 void action_print(void)
@@ -245,13 +239,6 @@ void action_fetch(void)
 void action_memory(void)
 {
   push(stack, (intptr_t)memory);
-}
-
-void action_modulo(void)
-{
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a % b);
 }
 
 void action_lt(void)
@@ -473,7 +460,7 @@ void action_macro(void)
       if (action != NULL) {
         action();
       } else {
-        fprintf(stderr, "Unknown token type: %d\n", macro->tokens[i].type);
+        fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n", scanner.line, scanner.column, macro->tokens[i].lexeme);
         exit(1);
       }
     }
@@ -547,32 +534,36 @@ void action_include(void)
   free(cleaned_filename);
 }
 
-void action_and(void)
+void action_divide_modulo(void)
 {
   int b = pop(stack);
   int a = pop(stack);
-  push(stack, a && b);
+  push(stack, a % b);
+  push(stack, floor(a / b));
 }
 
-void action_or(void)
+void free_resources(void) 
 {
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a || b);
-}
+    while (stack->size > 0) {    // Free the stack and its contents
+        pop(stack);
+    }
 
-void action_not(void)
-{
-  int a = pop(stack);
-  push(stack, !a);
+    free(loop_stack);
+    free(end_stack);
+    free(stack);
+    hashmap_free(hashmap);
 }
 
 void run_interpreter(const char *source_code)
 {
-  stack = create_stack();
-  loop_stack = create_stack();
-  end_stack = create_stack();
-  hashmap = hashmap_create();
+  if (stack == NULL) {      
+      stack = create_stack();
+      loop_stack = create_stack();
+      end_stack = create_stack();
+      hashmap = hashmap_create();
+
+      atexit(free_resources);     // Function to free resources at program exit
+  }
 
   init_scanner(&scanner, source_code);
 
@@ -582,8 +573,6 @@ void run_interpreter(const char *source_code)
     [TOKEN_ADD] = action_add,
     [TOKEN_SUBTRACT] = action_subtract,
     [TOKEN_MULTIPLY] = action_multiply,
-    [TOKEN_DIVIDE] = action_divide,
-    [TOKEN_MODULO] = action_modulo,
     [TOKEN_PERIOD] = action_print,
     [TOKEN_WHILE] = action_while,
     [TOKEN_THEN] = action_then,
@@ -622,9 +611,7 @@ void run_interpreter(const char *source_code)
     [TOKEN_DEFINE] = action_define,
     [TOKEN_MACRO] = action_macro,
     [TOKEN_INCLUDE] = action_include,
-    [TOKEN_AND] = action_and,
-    [TOKEN_OR] = action_or,
-    [TOKEN_NOT] = action_not,
+    [TOKEN_DIVIDE_MODULO] = action_divide_modulo,
   };
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
@@ -636,13 +623,4 @@ void run_interpreter(const char *source_code)
       exit(1);
     }
   }
-  // Free the stack and its contents
-  while (stack->size > 0) {
-    pop(stack);
-  }
-
-  free(loop_stack);
-  free(end_stack);
-  free(stack);
-  hashmap_free(hashmap);
 }
