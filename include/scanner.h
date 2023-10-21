@@ -6,11 +6,6 @@
 #include "lexer.h"
 
 /**
- * @file scanner.h
- * @brief Scanner implementation.
-*/
-
-/**
  * @brief Scanner structure.
  */
 typedef struct {

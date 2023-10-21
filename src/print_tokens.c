@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "lexer.h"
 #include "print_tokens.h"
 
@@ -16,12 +19,8 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_WHILE: printf("%-6s", "while"); break;
     case TOKEN_ELSE: printf("%-6s", "else"); break;
     case TOKEN_IF: printf("%-6s", "if"); break;
-    case TOKEN_BREAK: printf("%-6s", "break"); break;
-    case TOKEN_TRUE: printf("%-6s", "true"); break;
-    case TOKEN_FALSE: printf("%-6s", "false"); break;
     case TOKEN_DUP: printf("%-6s", "dup"); break;
     case TOKEN_SWAP: printf("%-6s", "swap"); break;
-    case TOKEN_ROLL: printf("%-6s", "roll"); break;
     case TOKEN_OVER: printf("%-6s", "over"); break;
     case TOKEN_PEEK: printf("%-6s", "peek"); break;
     case TOKEN_MEMORY: printf("%-6s", "memory"); break;
@@ -30,10 +29,7 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_STORE: printf("%-6s", "store"); break;
     case TOKEN_DROP: printf("%-6s", "drop"); break;
     case TOKEN_FETCH: printf("%-6s", "fetch"); break;
-    case TOKEN_DIVIDE: printf("%-6s", "/"); break;
-    case TOKEN_MODULO: printf("%-6s", "%"); break;
     case TOKEN_EQUAL: printf("%-6s", "="); break;
-    case TOKEN_NOT_EQUAL: printf("%-6s", "not"); break;
     case TOKEN_LESS: printf("%-6s", "<"); break;
     case TOKEN_LESS_EQUAL: printf("%-6s", "<="); break;
     case TOKEN_GREATER: printf("%-6s", ">"); break;
@@ -54,7 +50,6 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_PERIOD: printf("%-6s", "."); break;
     case TOKEN_UNKNOWN: printf("%-6s", "UNKNOWN"); break;
     case TOKEN_SYSCALL: printf("%-6s", "systemcall"); break;
-    case TOKEN_ASCII: printf("%-6s", "ascii"); break;
     case TOKEN_DUMP: printf("%-6s", "dump"); break;
     case TOKEN_TWO_DUP: printf("%-6s", "2dup"); break;
     case TOKEN_DO: printf("%-6s", "do"); break;
@@ -63,6 +58,9 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_TWO_DROP: printf("%-6s", "2drop"); break;
     case TOKEN_STRING_LITERAL: printf("%-6s", "STR"); break;
     case TOKEN_DEFINE: printf("%-6s", "define"); break;
+    case TOKEN_INCLUDE: printf("%-6s", "include"); break;
+    case TOKEN_CHAR: printf("%-6s", "CHAR"); break;
+    default: printf("%-6s", "UNKNOWN"); break;
   }
 
   printf("Line: %d[%-2d] Symbol: ", scanner->line, scanner->start_column);

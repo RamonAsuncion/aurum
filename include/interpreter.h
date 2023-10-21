@@ -1,11 +1,6 @@
 #ifndef _interpreter_h_
 #define _interpreter_h_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
 /**
  * @brief Runs the interpreter.
 */

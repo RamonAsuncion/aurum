@@ -1,6 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lexer.h"
 #include "hashmap.h"
 
-HashMap* hashmap_create(void) {
+HashMap* hashmap_create(void) 
+{
   HashMap* map = malloc(sizeof(HashMap));
   map->capacity = 16;
   map->size = 0;
@@ -11,7 +17,8 @@ HashMap* hashmap_create(void) {
   return map;
 }
 
-void hashmap_insert(HashMap* map, const char* key, Token* tokens, int numTokens) {
+void hashmap_insert(HashMap* map, const char* key, struct Token* tokens, int numTokens) 
+{
   Macro* macro = malloc(sizeof(Macro));
   macro->key = key;
   macro->tokens = tokens;
@@ -32,7 +39,8 @@ void hashmap_insert(HashMap* map, const char* key, Token* tokens, int numTokens)
   map->size++;
 }
 
-Macro* hashmap_get(HashMap* map, const char* key) {
+Macro* hashmap_get(HashMap* map, const char* key)
+{
   size_t index = 0;
   for (size_t i = 0; i < strlen(key); i++) {
     index += key[i];
@@ -46,11 +54,11 @@ Macro* hashmap_get(HashMap* map, const char* key) {
     index++;
     index %= map->capacity;
   }
-
   return NULL;
 }
 
-void hashmap_free(HashMap* map) {
+void hashmap_free(HashMap* map) 
+{
   for (int i = 0; i < map->capacity; i++) {
     if (map->entries[i] != NULL) {
       free(map->entries[i]);
@@ -60,7 +68,8 @@ void hashmap_free(HashMap* map) {
   free(map);
 }
 
-void hashmap_print(HashMap* map) {
+void hashmap_print(HashMap* map) 
+{
   for (int i = 0; i < map->capacity; i++) {
     if (map->entries[i] != NULL) {
       printf("Macro: %s\n", map->entries[i]->key);

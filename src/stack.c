@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "stack.h"
 
 Stack *create_stack(void) 
@@ -28,7 +31,7 @@ void push(Stack *stack, int value)
 
 int pop(Stack *stack) 
 {
-  if (stack->top == -1) {
+  if (stack->top <= -1) {
     return -1;
   }
   int popped_value = stack->data[stack->top];

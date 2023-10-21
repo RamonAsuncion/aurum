@@ -13,7 +13,7 @@ I wanted to learn how to create a programming language from scratch. I was going
 
 ## File Structure
 
-The `bin/` directory is used to store the executable files for my interpreter.
+The `bin/` directory is used to store the executable files for the interpreter.
 
 The `lib/` is the standard library for Aurum.
 
@@ -37,9 +37,11 @@ The `lexer` is responsible for taking the source code of a program as input and 
 
 The `interpreter` directory contains the implementation of the code execution phase of the interpreter. An interpreter is a program that translates a high-level programming language into machine code line by line during runtime.
 
+A `parser` is not required for a stack-based programming language because the syntax is simple enough to be parsed by the interpreter. The language uses Reverse Polish Notation (RPN) which is a mathematical notation in which every operator follows all of its operands. This makes the language easy to parse because there's only one way to interpret the sequence of symbols, and the order of the operations is determined by the order of the elements in the stack.
+
 ## Syntax
 
-The syntax of Aurum is inspired by Forth and Lua.
+The syntax of Aurum is inspired by Forth and Lua with a functionality of C.
 
 ## Goal
 

@@ -1,14 +1,17 @@
-#include "interpreter.h"
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "interpreter.h"
 
 #define RL_BUFSIZE 1024
 
-char *read_line(void)
+static char *read_line(void)
 {
   int bufsize = RL_BUFSIZE;
   int position = 0;
@@ -45,7 +48,7 @@ char *read_line(void)
   }
 }
 
-void interactive_mode(void) 
+static void interactive_mode(void) 
 {
   char *line;
   printf("Welcome to Aurum!\n");
@@ -67,7 +70,7 @@ void interactive_mode(void)
 }
 
 
-void run_interpreter_from_file(const char *filename)
+static void run_interpreter_from_file(const char *filename)
 {
   int fd = open(filename, O_RDONLY);
   if (fd == -1) {

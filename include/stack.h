@@ -1,18 +1,13 @@
 #ifndef _stack_h_
 #define _stack_h_
 
-#include <stdio.h> 
-#include <stdlib.h>
-#include <string.h>
+#define DEFAULT_CAPACITY 16
+
 #include <stdbool.h>
 
 /**
- * @file stack.h
- * @brief Stack implementation.
- */
-
-#define DEFAULT_CAPACITY 16
-
+ * @brief Stack structure.
+*/
 typedef struct {
     int *data;
     int top;

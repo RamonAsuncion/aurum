@@ -4,9 +4,13 @@
 #include "interpreter.h"
 #include "memory.h"
 #include "hashmap.h"
-#include "math.h"
 
-#define ASCII_MAX_SIZE 100
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <math.h>
 
 static Token token;
 static Scanner scanner;
@@ -83,11 +87,16 @@ void action_do(void)
   }
 }
 
+int added = 0;
 void action_end(void)
 {
   int loop_start = pop(loop_stack);
-  if (top(stack) != scanner.position)
+  // I basically have to keep the position of the end of the loop in a stack.
+  if (top(stack) != scanner.position && added == 0) {
     push(end_stack, scanner.position);
+    dump(end_stack);
+    added = 1;
+  }
   scanner.position = loop_start;
   scanner.current = scanner.source + scanner.position;
 }
@@ -351,28 +360,28 @@ void action_syscall(void)
   }
 }
 
-void action_ascii(void) {
-    int value;
-    int i = 0;
-    char buffer[ASCII_MAX_SIZE];
-    int length = pop(stack);
+// void action_ascii(void) {
+//     int value;
+//     int i = 0;
+//     char buffer[ASCII_MAX_SIZE];
+//     int length = pop(stack);
     
-    for(int count = 0; count < length; count++) {
-        value = pop(stack);
-        if(value >= 0x20 && value <= 0x7E) {
-            buffer[i++] = (char) value;
-        } else if(value == 0x0A) {
-            buffer[i++] = '\n';
-        } else {
-            buffer[i++] = '?';
-        }
-    }
+//     for(int count = 0; count < length; count++) {
+//         value = pop(stack);
+//         if(value >= 0x20 && value <= 0x7E) {
+//             buffer[i++] = (char) value;
+//         } else if(value == 0x0A) {
+//             buffer[i++] = '\n';
+//         } else {
+//             buffer[i++] = '?';
+//         }
+//     }
 
-    // Reverse the buffer and print the characters
-    for(int j = i - 1; j >= 0; j--) {
-        printf("%c", buffer[j]);
-    }
-}
+//     // Reverse the buffer and print the characters
+//     for(int j = i - 1; j >= 0; j--) {
+//         printf("%c", buffer[j]);
+//     }
+// }
 
 void action_dump(void)
 {
@@ -569,7 +578,6 @@ void run_interpreter(const char *source_code)
 
   actions = (action_func_t[]){
     [TOKEN_NUMBER] = action_number,
-    [TOKEN_ASCII] = action_ascii,
     [TOKEN_ADD] = action_add,
     [TOKEN_SUBTRACT] = action_subtract,
     [TOKEN_MULTIPLY] = action_multiply,
@@ -611,7 +619,7 @@ void run_interpreter(const char *source_code)
     [TOKEN_DEFINE] = action_define,
     [TOKEN_MACRO] = action_macro,
     [TOKEN_INCLUDE] = action_include,
-    [TOKEN_DIVIDE_MODULO] = action_divide_modulo,
+    // [TOKEN_DIVIDE_MODULO] = action_divide_modulo,
   };
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {

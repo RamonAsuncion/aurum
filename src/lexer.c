@@ -1,7 +1,14 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "lexer.h"
-#include "scanner.h"
-#include "print_tokens.h"
 #include "hashmap.h"
+#include "scanner.h"
+
+HashMap *hashmap = NULL;
 
 TrieNode *trie_node_create(TokenType type)
 {
@@ -30,16 +37,15 @@ TrieNode *init_keyword_trie(void)
 {
   TrieNode *root = trie_node_create(TOKEN_IDENTIFIER);
   trie_insert(root, "while", TOKEN_WHILE);
-  trie_insert(root, "else", TOKEN_ELSE);
+  trie_insert(root, "do", TOKEN_DO);
   trie_insert(root, "if", TOKEN_IF);
-  trie_insert(root, "break", TOKEN_BREAK);
-  trie_insert(root, "true", TOKEN_TRUE);
-  trie_insert(root, "false", TOKEN_FALSE);
+  trie_insert(root, "then", TOKEN_THEN);
+  trie_insert(root, "end", TOKEN_END);
+  trie_insert(root, "else", TOKEN_ELSE);
   trie_insert(root, "dup", TOKEN_DUP);
   trie_insert(root, "2dup", TOKEN_TWO_DUP);
   trie_insert(root, "swap", TOKEN_SWAP);
   trie_insert(root, "2swap", TOKEN_TWO_SWAP);
-  trie_insert(root, "roll", TOKEN_ROLL);
   trie_insert(root, "over", TOKEN_OVER);
   trie_insert(root, "2over", TOKEN_TWO_OVER);
   trie_insert(root, "peek", TOKEN_PEEK);
@@ -51,20 +57,15 @@ TrieNode *init_keyword_trie(void)
   trie_insert(root, "rot", TOKEN_ROT);
   trie_insert(root, "drop", TOKEN_DROP);
   trie_insert(root, "2drop", TOKEN_TWO_DROP);
-  trie_insert(root, "end", TOKEN_END);
-  trie_insert(root, "then", TOKEN_THEN);
-  trie_insert(root, "not", TOKEN_NOT_EQUAL);
   trie_insert(root, "systemcall", TOKEN_SYSCALL);
-  trie_insert(root, "ascii", TOKEN_ASCII);
   trie_insert(root, "dump", TOKEN_DUMP);
-  trie_insert(root, "do", TOKEN_DO);
   trie_insert(root, "define", TOKEN_DEFINE);
   trie_insert(root, "include", TOKEN_INCLUDE);
-  trie_insert(root, "divmod", TOKEN_DIVIDE_MODULO);
   return root;
 }
 
-TokenType trie_search(TrieNode *root, Scanner *scanner) {
+TokenType trie_search(TrieNode *root, Scanner *scanner) 
+{
   TrieNode *node = root;
   const char *source = scanner->start;
 
@@ -117,7 +118,8 @@ char advance(Scanner *scanner)
   return *scanner->current++;
 }
 
-char* get_token(Scanner *scanner) {
+char* get_token(Scanner *scanner) 
+{
   size_t length = (size_t)(scanner->current - scanner->start);
   char *lexeme = (char *)malloc(length + 1);
   memcpy(lexeme, scanner->start, length);
@@ -143,7 +145,8 @@ void skip_whitespace(Scanner *scanner)
     }
 }
 
-bool is_whitespace(Scanner *scanner) {
+bool is_whitespace(Scanner *scanner) 
+{
   return isspace(peek(scanner));
 }
 
@@ -174,7 +177,8 @@ Token create_token(TokenType type, Scanner *scanner)
   return token;
 }
 
-void update_position(Scanner *scanner) {
+void update_position(Scanner *scanner) 
+{
   scanner->position = scanner->current - scanner->source;
 }
 
