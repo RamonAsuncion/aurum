@@ -8,13 +8,16 @@
 #include "hashmap.h"
 #include "scanner.h"
 
+#define ALPHABET_SIZE (128)
+
 HashMap *hashmap = NULL;
 
 TrieNode *trie_node_create(TokenType type)
 {
   TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
+  int i;
   node->type = type;
-  for (int i = 0; i < 128; ++i) {
+  for (i = 0; i < ALPHABET_SIZE; ++i) {
     node->children[i] = NULL;
   }
   return node;
@@ -64,7 +67,7 @@ TrieNode *init_keyword_trie(void)
   return root;
 }
 
-TokenType trie_search(TrieNode *root, Scanner *scanner) 
+TokenType trie_search(TrieNode *root, Scanner *scanner)
 {
   TrieNode *node = root;
   const char *source = scanner->start;
@@ -118,7 +121,7 @@ char advance(Scanner *scanner)
   return *scanner->current++;
 }
 
-char* get_token(Scanner *scanner) 
+char* get_token(Scanner *scanner)
 {
   size_t length = (size_t)(scanner->current - scanner->start);
   char *lexeme = (char *)malloc(length + 1);
@@ -145,7 +148,7 @@ void skip_whitespace(Scanner *scanner)
     }
 }
 
-bool is_whitespace(Scanner *scanner) 
+bool is_whitespace(Scanner *scanner)
 {
   return isspace(peek(scanner));
 }
@@ -177,7 +180,7 @@ Token create_token(TokenType type, Scanner *scanner)
   return token;
 }
 
-void update_position(Scanner *scanner) 
+void update_position(Scanner *scanner)
 {
   scanner->position = scanner->current - scanner->source;
 }
