@@ -1,45 +1,38 @@
+# Compiler and flags
 CC=gcc -I ./include
 CFLAGS=-std=gnu99 -O2 -Wall -g
 
-SOURCES=$(wildcard src/*.c)
-OBJECTS=$(patsubst src/%.c, obj/%.o, $(SOURCES))
-
+# Directories
 OBJ=./obj
 BIN=./bin
 SRC=./src
 INC=./include
-TEST=./tests
 
-vpath %.c $(SRC)
-vpath %.h $(INC)
+# Source files and object files
+SOURCES=$(wildcard $(SRC)/*.c)
+OBJECTS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SOURCES))
 
-EXEC=./bin/aurum
+# Executable
+EXEC=$(BIN)/aurum
 
-all: mkpaths $(EXEC)
+# Default target
+all: $(EXEC)
 
-mkpaths:
-	@mkdir -p $(OBJ) $(BIN)
-
+# Link the object files to create the executable
 $(EXEC): $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
+# Compile the source files into object files
 $(OBJ)/%.o : $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Create the test executables (remove the main.o object file from the list of objects)
-$(BIN)/%: $(TEST)/%.c $(filter-out obj/main.o,$(OBJECTS))
-	@if [ "$@" != "main.o" ]; then \
-		$(CC) $(CFLAGS) $< $(filter-out obj/main.o,$(OBJECTS)) -o $@; \
-	fi
-
-tests: $(patsubst $(TEST)/%.c, $(BIN)/%, $(filter-out $(TEST)/main.c, $(TEST_FILES)))
-
+# Clean target
 clean:
 	rm -rf $(BIN)/$(EXEC) $(OBJECTS) ./obj/* 
-	find . -name "*~" -exec rm {} \;
-	find . -name "*.o" -exec rm {} \;
 
+# Distclean target
 distclean: 
 	rm -rf $(OBJ) 
 
+# Phony targets
 .PHONY: all clean distclean
