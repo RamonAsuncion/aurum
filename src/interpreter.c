@@ -81,22 +81,17 @@ void action_do(void)
   if (condition == 0) {
     pop(loop_stack);  // pop the position of the while
     scanner.position = pop(end_stack);
-    // TODO: This should not be from the beginning of the source code.
-    scanner.current = scanner.source + scanner.position + 3;
+    int keyword_length = strlen("do") + 1;
+    scanner.current = scanner.source + scanner.position + keyword_length;
     pop(stack);
   }
 }
 
-int added = 0;
 void action_end(void)
 {
   int loop_start = pop(loop_stack);
-  // I basically have to keep the position of the end of the loop in a stack.
-  if (top(stack) != scanner.position && added == 0) {
+  if (top(stack) != scanner.position)
     push(end_stack, scanner.position);
-    dump(end_stack);
-    added = 1;
-  }
   scanner.position = loop_start;
   scanner.current = scanner.source + scanner.position;
 }
