@@ -16,7 +16,11 @@ OBJECTS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SOURCES))
 EXEC=$(BIN)/aurum
 
 # Default target
-all: $(EXEC)
+all: mkdirs $(EXEC)
+
+# Create the directories
+mkdirs:
+	mkdir -p $(OBJ) $(BIN)
 
 # Link the object files to create the executable
 $(EXEC): $(OBJECTS)
