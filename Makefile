@@ -32,7 +32,7 @@ $(OBJ)/%.o : $(SRC)/%.c
 
 # Clean target
 clean:
-	rm -rf $(BIN)/$(EXEC) $(OBJECTS) ./obj/* 
+	rm -rf $(EXEC) $(OBJECTS) ./obj/* 
 
 # Distclean target
 distclean: 
