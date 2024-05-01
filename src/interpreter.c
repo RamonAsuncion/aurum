@@ -11,13 +11,13 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <math.h>
+#include <stdint.h>
 
 static Token token;
 static Scanner scanner;
 static Stack *stack;
 static Stack *loop_stack;
 static Stack *end_stack;
-HashMap* hashmap; 
 static char memory[MEMORY_CAPACITY];
 typedef void (*action_func_t)(void);
 action_func_t* actions;
@@ -201,7 +201,7 @@ void action_then(void)
       token = scan_token(&scanner);
       if (token.type == TOKEN_IF) {
           block_depth++;
-      } else if (token.type == TOKEN_ELSE && block_depth == 1) { // !else_case_encountered && block_depth == 1) {
+      } else if (token.type == TOKEN_ELSE && block_depth == 1) {
           break;
       } else if (token.type == TOKEN_END) {
           block_depth--;
@@ -229,13 +229,13 @@ void action_else(void)
 void action_store(void)
 {
   char byte = pop(stack);
-  uintptr_t addr = pop(stack);
+  intptr_t addr = pop(stack);
   memory[addr] = byte & 0xFF;
 }
 
 void action_fetch(void)
 {
-  uintptr_t addr = pop(stack);
+  intptr_t addr = pop(stack);
   char byte = memory[addr];
   push(stack, byte);
 }
@@ -354,29 +354,6 @@ void action_syscall(void)
     }
   }
 }
-
-// void action_ascii(void) {
-//     int value;
-//     int i = 0;
-//     char buffer[ASCII_MAX_SIZE];
-//     int length = pop(stack);
-    
-//     for(int count = 0; count < length; count++) {
-//         value = pop(stack);
-//         if(value >= 0x20 && value <= 0x7E) {
-//             buffer[i++] = (char) value;
-//         } else if(value == 0x0A) {
-//             buffer[i++] = '\n';
-//         } else {
-//             buffer[i++] = '?';
-//         }
-//     }
-
-//     // Reverse the buffer and print the characters
-//     for(int j = i - 1; j >= 0; j--) {
-//         printf("%c", buffer[j]);
-//     }
-// }
 
 void action_dump(void)
 {
