@@ -32,11 +32,11 @@ $(OBJ)/%.o : $(SRC)/%.c
 
 # Clean target
 clean:
-	rm -rf $(EXEC) $(OBJECTS) ./obj/* 
+	rm -rf $(EXEC) $(OBJECTS) ./obj/
 
 # Distclean target
-distclean: 
-	rm -rf $(OBJ) 
+distclean:
+	rm -rf $(OBJ)
 
 # Phony targets
 .PHONY: all clean distclean
