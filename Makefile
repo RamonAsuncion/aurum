@@ -1,5 +1,5 @@
 # Compiler and flags
-CC=gcc -I ./include
+CC=gcc -I./include
 CFLAGS=-std=gnu99 -O2 -Wall -g
 
 # Directories
@@ -32,11 +32,16 @@ $(OBJ)/%.o : $(SRC)/%.c
 
 # Clean target
 clean:
-	rm -rf $(EXEC) $(OBJECTS) ./obj/
+	rm -rf $(EXEC) $(OBJECTS)./obj/
 
 # Distclean target
 distclean:
 	rm -rf $(OBJ)
 
+# Install target (optional)
+install:
+	cp $(EXEC) /usr/local/bin/
+
 # Phony targets
-.PHONY: all clean distclean
+.PHONY: all clean distclean install
+
