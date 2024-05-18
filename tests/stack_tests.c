@@ -1,10 +1,9 @@
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "stack.h"
 
-void test_stack(void) 
+void test_stack(void)
 {
   Stack *stack = create_stack();
 

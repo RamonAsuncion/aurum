@@ -1,10 +1,10 @@
 #include <assert.h>
+#include <stdlib.h>
 
 #include "lexer.h"
 #include "scanner.h"
 #include "print_tokens.h"
 
-// Scan all tokens from the source code.
 void scan_tokens(Scanner *scanner)
 {
   Token *tokens = malloc(256 * sizeof(Token));
@@ -20,7 +20,7 @@ void scan_tokens(Scanner *scanner)
   free(tokens);
 }
 
-int main(void) 
+int main(void)
 {
   const char *source = "define print 1 1 3 systemcall end";
   Scanner scanner;
