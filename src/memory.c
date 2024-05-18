@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h> // for read() and write()
+#include <unistd.h>
 
 #include "memory.h"
 
-void print_memory(char *memory, int size) 
+void print_memory(char *memory, int size)
 {
   printf("Memory content: ");
   for (int i = 0; i < size; ++i) {
@@ -12,3 +12,4 @@ void print_memory(char *memory, int size)
   }
   printf("\n");
 }
+

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "lexer.h"
 #include "print_tokens.h"
@@ -38,7 +37,7 @@ void print_token(Token token, Scanner *scanner, int token_id)
     case TOKEN_BITWISE_AND: printf("%-6s", "&"); break;
     case TOKEN_BITWISE_OR: printf("%-6s", "|"); break;
     case TOKEN_BITWISE_NOT: printf("%-6s", "~"); break;
-    case TOKEN_LEFT_SHIFT: printf("%-6s", "<<"); break; // maybe i don't like >> and << 
+    case TOKEN_LEFT_SHIFT: printf("%-6s", "<<"); break;
     case TOKEN_RIGHT_SHIFT: printf("%-6s", ">>"); break;
     case TOKEN_ESCAPE_SEQUENCE: printf("%-6s", "ESC"); break;
     case TOKEN_NEW_LINE: printf("%-6s", "NL"); break;
@@ -69,3 +68,4 @@ void print_token(Token token, Scanner *scanner, int token_id)
   }
   printf("\n");
 }
+

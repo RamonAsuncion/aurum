@@ -48,15 +48,15 @@ static char *read_line(void)
   }
 }
 
-static void interactive_mode(void) 
+static void interactive_mode(void)
 {
   char *line;
   printf("Welcome to Aurum!\n");
   while (1) {
     printf(">>> ");
     line = read_line();
-    if (line == NULL) {    
-      break;  
+    if (line == NULL) {
+      break;
     }
 
     if (strcmp(line, "exit") == 0) {
@@ -105,7 +105,7 @@ static void run_interpreter_from_file(const char *filename)
   close(fd);
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   if (argc < 2) {
     interactive_mode();
@@ -121,3 +121,4 @@ int main(int argc, char *argv[])
   }
   return 0;
 }
+

@@ -10,7 +10,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <math.h>
 #include <stdint.h>
 
 static Token token;
@@ -79,7 +78,7 @@ void action_do(void)
 {
   int condition = pop(stack);
   if (condition == 0) {
-    pop(loop_stack);  // pop the position of the while
+    pop(loop_stack);
     scanner.position = pop(end_stack);
     int keyword_length = strlen("do") + 1;
     scanner.current = scanner.source + scanner.position + keyword_length;
@@ -96,7 +95,7 @@ void action_end(void)
   scanner.current = scanner.source + scanner.position;
 }
 
-void action_dup(void) 
+void action_dup(void)
 {
   int a = pop(stack);
   push(stack, a);
@@ -191,37 +190,35 @@ void action_peek(void)
 
 void action_if(void) {}
 
-void action_then(void) 
+void action_then(void)
 {
-  // Check the condition and continue the body if it is true. Otherwise, skip the body.
   int condition = pop(stack);
   if (condition == 0) {
     int block_depth = 1;
     while (block_depth > 0) {
       token = scan_token(&scanner);
       if (token.type == TOKEN_IF) {
-          block_depth++;
+        block_depth++;
       } else if (token.type == TOKEN_ELSE && block_depth == 1) {
-          break;
+        break;
       } else if (token.type == TOKEN_END) {
-          block_depth--;
+        block_depth--;
       } else {
-          continue;
+        continue;
       }
     }
-  } 
+  }
 }
 
 void action_else(void)
 {
-  // Skip the body if the condition is true. Otherwise, continue the body.
   int block_depth = 1;
   while (block_depth > 0) {
     token = scan_token(&scanner);
     if (token.type == TOKEN_IF) {
-        block_depth++;
+      block_depth++;
     } else if (token.type == TOKEN_END) {
-        block_depth--;
+      block_depth--;
     }
   }
 }
@@ -314,7 +311,7 @@ void action_bitwise_xor(void)
   push(stack, a ^ b);
 }
 
-void action_syscall(void) 
+void action_syscall(void)
 {
   int argument_count = pop(stack);
 
@@ -393,7 +390,7 @@ void action_string_literal(void)
       memory[memory_index++] = literal[i];
     }
   }
-  
+
   memory[memory_index] = '\0'; // Null-terminate the memory
 
   push(stack, literal_length);
@@ -418,10 +415,13 @@ void action_define(void)
   macros[i] = token;
 
   // Insert the macro into the hashmap
-  hashmap_insert(hashmap, macro_name.lexeme, macros, num_tokens);  
+  hashmap_insert(hashmap, macro_name.lexeme, macros, num_tokens);
 
   free(macros);
 }
+
+// FIXME: It's not properly getting the macro when it's encountered again.
+// It's trying to intpret it as a type.
 
 void action_macro(void)
 {
@@ -432,23 +432,23 @@ void action_macro(void)
   Macro* macro = hashmap_get(hashmap, macro_name);
 
   // Push the tokens onto the stack
-  for (int i = 0; i < macro->numTokens; i++) {
+  for (int i = 0; i < macro->numTokens; ++i) {
     if (isdigit(macro->tokens[i].lexeme[0])) {
       push(stack, atoi(macro->tokens[i].lexeme));
     } else {
-      // Call the appropriate action function based on the token's type
       action_func_t action = actions[macro->tokens[i].type];
       if (action != NULL) {
         action();
       } else {
-        fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n", scanner.line, scanner.column, macro->tokens[i].lexeme);
+        fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n",
+                scanner.line, scanner.column, macro->tokens[i].lexeme);
         exit(1);
       }
     }
   }
 }
 
-void action_include(void) 
+void action_include(void)
 {
   // Get the filename from the current token
   const char* filename = scan_token(&scanner).lexeme;
@@ -486,7 +486,7 @@ void action_include(void)
   fclose(file);
 
   // Remove line breaks and add a space at the end of each line
-  for (int i = 0; i < file_size; i++) {
+  for (int i = 0; i < file_size; ++i) {
     if (buffer[i] == '\n') {
       buffer[i] = ' ';
     }
@@ -515,35 +515,27 @@ void action_include(void)
   free(cleaned_filename);
 }
 
-void action_divide_modulo(void)
+void free_resources(void)
 {
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a % b);
-  push(stack, floor(a / b));
-}
+  while (stack->size > 0) {
+    pop(stack);
+  }
 
-void free_resources(void) 
-{
-    while (stack->size > 0) {    // Free the stack and its contents
-        pop(stack);
-    }
-
-    free(loop_stack);
-    free(end_stack);
-    free(stack);
-    hashmap_free(hashmap);
+  free(loop_stack);
+  free(end_stack);
+  free(stack);
+  hashmap_free(hashmap);
 }
 
 void run_interpreter(const char *source_code)
 {
-  if (stack == NULL) {      
-      stack = create_stack();
-      loop_stack = create_stack();
-      end_stack = create_stack();
-      hashmap = hashmap_create();
+  if (stack == NULL) {
+    stack = create_stack();
+    loop_stack = create_stack();
+    end_stack = create_stack();
+    hashmap = hashmap_create();
 
-      atexit(free_resources);     // Function to free resources at program exit
+    atexit(free_resources);
   }
 
   init_scanner(&scanner, source_code);
@@ -573,7 +565,7 @@ void run_interpreter(const char *source_code)
     [TOKEN_TWO_OVER] = action_two_over,
     [TOKEN_ROT] = action_rot,
     [TOKEN_PEEK] = action_peek,
-    [TOKEN_IF] = action_if,     /* I don't know what I'm going to do for now. The if statements need a revamp. */
+    [TOKEN_IF] = action_if,
     [TOKEN_ELSE] = action_else,
     [TOKEN_STORE] = action_store,
     [TOKEN_FETCH] = action_fetch,
@@ -591,7 +583,6 @@ void run_interpreter(const char *source_code)
     [TOKEN_DEFINE] = action_define,
     [TOKEN_MACRO] = action_macro,
     [TOKEN_INCLUDE] = action_include,
-    // [TOKEN_DIVIDE_MODULO] = action_divide_modulo,
   };
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
@@ -599,8 +590,10 @@ void run_interpreter(const char *source_code)
     if (action != NULL) {
       action();
     } else {
-      fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n", scanner.line, scanner.column, token.lexeme);
+      fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n",
+              scanner.line, scanner.column, token.lexeme);
       exit(1);
     }
   }
 }
+

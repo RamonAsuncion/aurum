@@ -57,3 +57,4 @@ void dump(Stack *stack);
 bool is_empty(Stack *stack);
 
 #endif // _stack_h_
+

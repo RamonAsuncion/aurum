@@ -143,9 +143,9 @@ char peek_next(Scanner *scanner)
 
 void skip_whitespace(Scanner *scanner)
 {
-    while (isspace(peek(scanner))) {
-        advance(scanner);
-    }
+  while (isspace(peek(scanner))) {
+    advance(scanner);
+  }
 }
 
 bool is_whitespace(Scanner *scanner)
@@ -249,55 +249,59 @@ Token scan_token(Scanner *scanner)
       }
     case '/':
       if (match(scanner, '/')) {
-          // Single-line comment
-          while (peek(scanner) != '\n' && !is_at_end(scanner)) {
-              advance(scanner);
-          }
-          if (peek(scanner) == '\n') {
-              advance(scanner); // Consume '\n'
-          }
-          // Recursively get the next token after the comment
-          return scan_token(scanner);
+        // Single-line comment
+        while (peek(scanner) != '\n' && !is_at_end(scanner)) {
+          advance(scanner);
+        }
+        if (peek(scanner) == '\n') {
+          advance(scanner); // Consume '\n'
+        }
+        // Recursively get the next token after the comment
+        return scan_token(scanner);
       } else if (match(scanner, '*')) {
-          // Multi-line comment
-          while (!(peek(scanner) == '*' && peek_next(scanner) == '/') && !is_at_end(scanner)) {
-              if (peek(scanner) == '\n') {
-                  scanner->line++; // Increment line count
-              }
-              advance(scanner);
+        // Multi-line comment
+        while (!(peek(scanner) == '*' && peek_next(scanner) == '/') && !is_at_end(scanner)) {
+          if (peek(scanner) == '\n') {
+            scanner->line++; // Increment line count
           }
-          if (!is_at_end(scanner)) {
-              advance(scanner); // Consume '*'
-              advance(scanner); // Consume '/'
-          }
-          // Recursively get the next token after the comment
-          return scan_token(scanner);
+          advance(scanner);
+        }
+        if (!is_at_end(scanner)) {
+          advance(scanner); // Consume '*'
+          advance(scanner); // Consume '/'
+        }
+        // Recursively get the next token after the comment
+        return scan_token(scanner);
       } else {
-          return create_token(TOKEN_UNKNOWN, scanner);
+        return create_token(TOKEN_UNKNOWN, scanner);
       }
     default:
       if (isdigit(c)) {
-          while (isdigit(peek(scanner))) advance(scanner);
-          if (isalpha(peek(scanner))) {
-              while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
-              TokenType type = check_keyword(scanner);
-              return create_token(type, scanner);
-          } else {
-              return create_token(TOKEN_NUMBER, scanner);
-          }
-      } else if (isalpha(c) || c == '_') {
+        while (isdigit(peek(scanner))) advance(scanner);
+        if (isalpha(peek(scanner))) {
           while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
           TokenType type = check_keyword(scanner);
-          // Tokenize existing macros
-          if (type == TOKEN_IDENTIFIER) {
+          return create_token(type, scanner);
+        } else {
+          return create_token(TOKEN_NUMBER, scanner);
+        }
+      } else if (isalpha(c) || c == '_') {
+        while (isalnum(peek(scanner)) || peek(scanner) == '_') advance(scanner);
+        TokenType type = check_keyword(scanner);
+        if (type == TOKEN_IDENTIFIER) {
+          if (hashmap != NULL) {
             Macro *macro = hashmap_get(hashmap, get_token(scanner));
             if (macro != NULL) {
+              printf("Macro: %s", macro->key);
               return create_token(TOKEN_MACRO, scanner);
             }
           }
           return create_token(type, scanner);
+        }
+        return create_token(type, scanner);
       } else {
-          return create_token(TOKEN_UNKNOWN, scanner);
+        return create_token(TOKEN_UNKNOWN, scanner);
       }
   }
 }
+
