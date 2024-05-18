@@ -65,13 +65,11 @@ max ( a b -- max(a,b) )
 ### While Loop
 
 ```text
-<starting-value> 
+<starting-value>
 while <condition> do
   <op>
 end
 ```
-
-(Unsure how for loops will work)
 
 ### If Statement
 
@@ -80,7 +78,7 @@ if <condition> then
   <statement>
 elseif <condition> then
   <statement>
-else 
+else
   <statement>
 end
 ```
@@ -124,8 +122,6 @@ final <name> <value> end
 
 ## Variables (Immutable)
 
-Work in progress.
-
 ## Macros
 
 ```text
@@ -133,6 +129,8 @@ define <name> <value> end
 ```
 
 ## Procedures
+
+No return values.
 
 ```text
 procedure <name> ( <args> ) is
