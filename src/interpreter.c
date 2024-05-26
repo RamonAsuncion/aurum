@@ -540,7 +540,7 @@ void run_interpreter(const char *source_code)
 
   init_scanner(&scanner, source_code);
 
-  actions = (action_func_t[]){
+  action_func_t* actions = (action_func_t[]){
     [TOKEN_NUMBER] = action_number,
     [TOKEN_ADD] = action_add,
     [TOKEN_SUBTRACT] = action_subtract,
