@@ -6,3 +6,4 @@
 void print_token(Token token, Scanner *scanner, int token_id);
 
 #endif // _print_tokens_h_
+

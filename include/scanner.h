@@ -77,3 +77,4 @@ Token create_token(TokenType type, Scanner *scanner);
 Token scan_token(Scanner *scanner);
 
 #endif // _scanner_h_
+

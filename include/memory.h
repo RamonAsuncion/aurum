@@ -15,4 +15,5 @@
 */
 void print_memory(char *memory, int size);
 
-#endif
+#endif // _memory_h_
+

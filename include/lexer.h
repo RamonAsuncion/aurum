@@ -41,18 +41,18 @@ typedef enum {
   TOKEN_SUBTRACT,
   TOKEN_MULTIPLY,
   // Relational operations
-  TOKEN_EQUAL, 
-  TOKEN_LESS, 
+  TOKEN_EQUAL,
+  TOKEN_LESS,
   TOKEN_LESS_EQUAL,
   TOKEN_GREATER,
-  TOKEN_GREATER_EQUAL, 
+  TOKEN_GREATER_EQUAL,
   // Bitwise operations
   TOKEN_BITWISE_AND,
-  TOKEN_BITWISE_OR, 
+  TOKEN_BITWISE_OR,
   TOKEN_BITWISE_XOR,
-  TOKEN_BITWISE_NOT, 
-  TOKEN_LEFT_SHIFT, 
-  TOKEN_RIGHT_SHIFT, 
+  TOKEN_BITWISE_NOT,
+  TOKEN_LEFT_SHIFT,
+  TOKEN_RIGHT_SHIFT,
   // Escape sequences
   TOKEN_ESCAPE_SEQUENCE,
   TOKEN_NEW_LINE,
@@ -88,3 +88,4 @@ typedef struct TrieNode {
 } TrieNode;
 
 #endif // _lexer_h_
+

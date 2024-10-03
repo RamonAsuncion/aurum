@@ -2,30 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lexer.h"
 #include "hashmap.h"
 
-HashMap* hashmap_create(void) 
+// HashMap *hashmap = NULL;
+
+HashMap* hashmap_create(void)
 {
   HashMap* map = malloc(sizeof(HashMap));
   map->capacity = 16;
   map->size = 0;
   map->entries = malloc(map->capacity * sizeof(Macro*));
-  for (int i = 0; i < map->capacity; i++) {
+  for (int i = 0; i < map->capacity; ++i) {
     map->entries[i] = NULL;
   }
   return map;
 }
 
-void hashmap_insert(HashMap* map, const char* key, struct Token* tokens, int numTokens) 
+void hashmap_insert(HashMap* map, const char* key, Token* tokens, int numTokens)
 {
   Macro* macro = malloc(sizeof(Macro));
-  macro->key = key;
-  macro->tokens = tokens;
+  macro->key = strdup(key);
+  macro->tokens = malloc(numTokens * sizeof(Token));
+  memcpy(macro->tokens, tokens, numTokens * sizeof(Token));
   macro->numTokens = numTokens;
 
   size_t index = 0;
-  for (size_t i = 0; i < strlen(key); i++) {
+  for (size_t i = 0; i < strlen(key); ++i) {
     index += key[i];
   }
   index %= map->capacity;
@@ -41,8 +43,13 @@ void hashmap_insert(HashMap* map, const char* key, struct Token* tokens, int num
 
 Macro* hashmap_get(HashMap* map, const char* key)
 {
+  if (!map) {
+    fprintf(stderr, "Error: Map is null.\n");
+    return NULL;
+  }
+
   size_t index = 0;
-  for (size_t i = 0; i < strlen(key); i++) {
+  for (size_t i = 0; i < strlen(key); ++i) {
     index += key[i];
   }
   index %= map->capacity;
@@ -57,10 +64,12 @@ Macro* hashmap_get(HashMap* map, const char* key)
   return NULL;
 }
 
-void hashmap_free(HashMap* map) 
+void hashmap_free(HashMap* map)
 {
-  for (int i = 0; i < map->capacity; i++) {
+  for (int i = 0; i < map->capacity; ++i) {
     if (map->entries[i] != NULL) {
+      // free(map->entries[i]->key);
+      free(map->entries[i]->tokens);
       free(map->entries[i]);
     }
   }
@@ -68,19 +77,19 @@ void hashmap_free(HashMap* map)
   free(map);
 }
 
-void hashmap_print(HashMap* map) 
+void hashmap_print(HashMap* map)
 {
-  for (int i = 0; i < map->capacity; i++) {
+  for (int i = 0; i < map->size; ++i) {
     if (map->entries[i] != NULL) {
       printf("Macro: %s\n", map->entries[i]->key);
       printf("Number of tokens: %d\n", map->entries[i]->numTokens);
-      
-      // Print out the values
+
       printf("Tokens: ");
-      for (int j = 0; j < map->entries[i]->numTokens; j++) {
+      for (int j = 0; j < map->entries[i]->numTokens; ++j) {
         printf("%s ", map->entries[i]->tokens[j].lexeme);
       }
       printf("\n");
     }
   }
 }
+
