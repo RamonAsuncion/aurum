@@ -41,7 +41,7 @@ typedef enum {
   TOKEN_GREATER,
   TOKEN_GREATER_EQUAL,
   TOKEN_BITWISE_AND,
-  TOKEN_BITWISE_OR, 
+  TOKEN_BITWISE_OR,
   TOKEN_BITWISE_XOR,
   TOKEN_BITWISE_NOT,
   TOKEN_LEFT_SHIFT,
@@ -76,3 +76,4 @@ typedef struct TrieNode {
 } TrieNode;
 
 #endif // _lexer_h_
+

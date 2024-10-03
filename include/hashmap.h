@@ -58,3 +58,4 @@ void hashmap_free(HashMap* map);
 void hashmap_print(HashMap* map);
 
 #endif // _hashmap_h_
+
