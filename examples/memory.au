@@ -5,13 +5,12 @@ memory 0 + 97 store
 memory 1 + 98 store
 memory 2 + 99 store
 
-3 memory 1 1 3 systemcall 
+3 memory 1 1 3 systemcall
 
 // fetch (increment each character)
 memory 0 + dup fetch 1 + store
 memory 1 + dup fetch 1 + store
 memory 2 + dup fetch 1 + store
 
-3 memory 1 1 3 systemcall 
+3 memory 1 1 3 systemcall
 
-10 1 ascii

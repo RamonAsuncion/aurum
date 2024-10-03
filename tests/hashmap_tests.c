@@ -6,7 +6,7 @@
 
 int main(void)
 {
-  int tokens = 4;
+  int tokens = 5;
   HashMap* map = hashmap_create();
 
   Token* macros = malloc(tokens * sizeof(Token));
@@ -14,10 +14,12 @@ int main(void)
   macros[0].lexeme = "1";
   macros[1].type = TOKEN_NUMBER;
   macros[1].lexeme = "1";
-  macros[2].type = TOKEN_SYSCALL;
-  macros[2].lexeme = "systemcall";
-  macros[3].type = TOKEN_END;
-  macros[3].lexeme = "end";
+  macros[2].type = TOKEN_NUMBER;
+  macros[2].lexeme = "3";
+  macros[3].type = TOKEN_SYSCALL;
+  macros[3].lexeme = "systemcall";
+  macros[4].type = TOKEN_END;
+  macros[4].lexeme = "end";
   hashmap_insert(map, "print", macros, tokens);
 
   Macro* macro = hashmap_get(map, "print");

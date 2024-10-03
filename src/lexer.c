@@ -10,7 +10,8 @@
 
 #define ALPHABET_SIZE (128)
 
-HashMap *hashmap = NULL;
+// HashMap *hashmap = NULL;
+extern HashMap *hashmap;
 
 TrieNode *trie_node_create(TokenType type)
 {

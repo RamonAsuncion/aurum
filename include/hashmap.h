@@ -1,15 +1,14 @@
 #ifndef _hashmap_h_
 #define _hashmap_h_
 
-// Forward declaration of Token.
-struct Token;
+#include "lexer.h"
 
 /**
  * @brief Handling macros
 */
 typedef struct {
   const char* key;
-  struct Token* tokens;
+  Token* tokens;
   int numTokens;
 } Macro;
 
@@ -21,7 +20,7 @@ typedef struct {
 } HashMap;
 
 /* Hash map */
-extern HashMap* hashmap;
+// extern HashMap* hashmap;
 
 /**
  * @brief Creates a new hashmap
@@ -36,7 +35,7 @@ HashMap* hashmap_create(void);
  * @param tokens The tokens of the macro
  * @param numTokens The number of tokens in the macro
 */
-void hashmap_insert(HashMap* map, const char* key, struct Token* tokens, int numTokens);
+void hashmap_insert(HashMap* map, const char* key, Token* tokens, int numTokens);
 
 /**
  * @brief Gets a macro from the hashmap

@@ -22,7 +22,7 @@ void scan_tokens(Scanner *scanner)
 
 int main(void)
 {
-  const char *source = "define print 1 1 3 systemcall end";
+  const char *source = "define print 1 1 3 systemcall end print";
   Scanner scanner;
   init_scanner(&scanner, source);
   scan_tokens(&scanner);

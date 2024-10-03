@@ -1,6 +1,7 @@
 # Compiler and flags
 CC=gcc -I./include
-CFLAGS=-std=gnu99 -O2 -Wall -g
+CFLAGS=-std=gnu99 -Wall -Werror -Wfatal-errors -Wno-unused-function -Wpedantic -g
+# -Wall -Wextra -Wshadow -Werror
 
 # Directories
 OBJ=./obj
@@ -22,7 +23,7 @@ TEST_EXECUTABLES=$(foreach t,$(notdir $(TEST_SOURCES:.c=)), $(TEST_BIN)/$(t))
 
 # Targets
 all: mkdirs $(EXEC)
-test: $(TEST_EXECUTABLES)
+test: mkdirs $(TEST_EXECUTABLES)
 
 # Create the directories
 mkdirs:
@@ -35,7 +36,6 @@ $(EXEC): $(OBJECTS)
 $(OBJ)/%.o : $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile test files into object files
 $(OBJ)/%.o : $(TEST_SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 

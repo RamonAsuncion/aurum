@@ -1,6 +1,5 @@
-3 // count
-memory // buffer
+"Hello, World!\n"
 1 // fd
 1 // syscall number
-3 // amount of arguments of the syscall 
+3 // amount of arguments of the syscall
 systemcall
