@@ -14,10 +14,15 @@
 
 static Token token;
 static Scanner scanner;
+
 static Stack *stack;
 static Stack *loop_stack;
 static Stack *end_stack;
+
 static char memory[MEMORY_CAPACITY];
+
+HashMap* hashmap;
+
 typedef void (*action_func_t)(void);
 action_func_t* actions;
 
@@ -71,7 +76,6 @@ void action_while(void)
 {
   if (top(loop_stack) != scanner.position)
     push(loop_stack, scanner.position);
-
 }
 
 void action_do(void)
@@ -390,13 +394,12 @@ void action_string_literal(void)
       memory[memory_index++] = literal[i];
     }
   }
-
-  memory[memory_index] = '\0'; // Null-terminate the memory
+  memory[memory_index] = '\0';
 
   push(stack, literal_length);
   push(stack, memory_index - literal_length);
 
-  free(string); // Free the allocated memory for the string
+  free(string);
 }
 
 void action_define(void)
@@ -420,19 +423,33 @@ void action_define(void)
   free(macros);
 }
 
-// FIXME: It's not properly getting the macro when it's encountered again.
-// It's trying to intpret it as a type.
-
 void action_macro(void)
 {
-  // Get the macro name from the current token
   const char* macro_name = token.lexeme;
 
-  // Get the macro from the hashmap
+  // Error handling to check if hashmap exists and macro is found.
+  if (hashmap == NULL || hashmap->size == 0) {
+    printf("Hashmap is null.\n");
+    exit(0);
+  }
+
   Macro* macro = hashmap_get(hashmap, macro_name);
+  if (macro == NULL) {
+    fprintf(stderr, "Error: Macro '%s' not found.\n", macro_name);
+    return;
+  }
+
+  if (macro->tokens == NULL) {
+    fprintf(stderr, "Error: Tokens for macro '%s' are NULL.\n", macro_name);
+    return;
+  }
 
   // Push the tokens onto the stack
   for (int i = 0; i < macro->numTokens; ++i) {
+    if (i < 0 || i >= macro->numTokens) {
+      fprintf(stderr, "Error: Index %d out of bounds for macro '%s'.\n", i, macro_name);
+      return;
+    }
     if (isdigit(macro->tokens[i].lexeme[0])) {
       push(stack, atoi(macro->tokens[i].lexeme));
     } else {
@@ -529,18 +546,30 @@ void free_resources(void)
 
 void run_interpreter(const char *source_code)
 {
-  if (stack == NULL) {
-    stack = create_stack();
-    loop_stack = create_stack();
-    end_stack = create_stack();
-    hashmap = hashmap_create();
 
-    atexit(free_resources);
-  }
+  //InterpreterState state;
+  //init_scanner(&state.scanner, source_code);
+  //state.actions = (action_func_t[]) {
+  //    // Initialization of action functions
+  //};
+  //state.hashmap = hashmap_create();
+
+  //Stack *stack = create_stack();
+  //Stack *loop_stack = create_stack();
+  //Stack *end_stack = create_stack();
+
+  //if (stack == NULL) {
+  stack = create_stack();
+  loop_stack = create_stack();
+  end_stack = create_stack();
+  hashmap = hashmap_create();
+
+  // atexit(free_resources);
+  //}
 
   init_scanner(&scanner, source_code);
 
-  action_func_t* actions = (action_func_t[]){
+  actions = (action_func_t[]) {
     [TOKEN_NUMBER] = action_number,
     [TOKEN_ADD] = action_add,
     [TOKEN_SUBTRACT] = action_subtract,
@@ -585,8 +614,11 @@ void run_interpreter(const char *source_code)
     [TOKEN_INCLUDE] = action_include,
   };
 
+  // while ((state.token = scan_token(&state.scanner)).type != TOKEN_EOF) {
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
+    // action_func_t action = state.actions[state.token.type];
     action_func_t action = actions[token.type];
+    hashmap_print(hashmap);
     if (action != NULL) {
       action();
     } else {
@@ -595,5 +627,14 @@ void run_interpreter(const char *source_code)
       exit(1);
     }
   }
+
+  while (stack->size > 0) {
+    pop(stack);
+  }
+
+  free(loop_stack);
+  free(end_stack);
+  free(stack);
+  hashmap_free(hashmap);
 }
 
