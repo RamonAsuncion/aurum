@@ -27,8 +27,8 @@ static char *read_line(void)
     c = getchar();
 
     if (c == EOF) {
-      free(buffer);  // free the buffer to avoid memory leak
-      return NULL;   // return NULL when EOF is encountered
+      free(buffer);
+      return NULL;
     } else if (c == '\n') {
       buffer[position] = '\0';
       return buffer;
@@ -70,36 +70,34 @@ static void interactive_mode(void)
 }
 
 
-static void run_interpreter_from_file(const char *filename)
+static void run_interpreter_from_file(const char *file_name)
 {
-  int fd = open(filename, O_RDONLY);
+  int fd = open(file_name, O_RDONLY);
   if (fd == -1) {
     perror("Error opening file for reading");
     return;
   }
 
-  struct stat fileInfo = {0};
-  if (fstat(fd, &fileInfo) == -1) {
+  struct stat file_info = {0};
+  if (fstat(fd, &file_info) == -1) {
     perror("Error getting the file size");
     return;
   }
 
-  if (fileInfo.st_size == 0) {
+  if (file_info.st_size == 0) {
     return;
   }
 
-  char *source_code = mmap(0, fileInfo.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  char *source_code = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if (source_code == MAP_FAILED) {
     close(fd);
     perror("Error mmapping the file");
     return;
   }
 
-  // Run the interpreter on the file contents
   run_interpreter(source_code);
 
-  // Unmap and close the file
-  if (munmap(source_code, fileInfo.st_size) == -1) {
+  if (munmap(source_code, file_info.st_size) == -1) {
     perror("Error un-mmapping the file");
   }
   close(fd);
@@ -110,14 +108,14 @@ int main(int argc, char *argv[])
   if (argc < 2) {
     interactive_mode();
   } else {
-    const char *filename = argv[1];
-    const char *fileExtension = strrchr(filename, '.');
+    const char *file_name = argv[1];
+    const char *file_extension = strrchr(file_name, '.');
 
-    if (!fileExtension || strcmp(fileExtension, ".au") != 0) {
+    if (!file_extension || strcmp(file_extension, ".au") != 0) {
       printf("Error: Unknown-unsupported file format.\n");
       return 1;
     }
-    run_interpreter_from_file(filename);
+    run_interpreter_from_file(file_name);
   }
   return 0;
 }

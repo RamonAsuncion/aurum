@@ -54,21 +54,16 @@ enum token_type {
   TOKEN_INCLUDE,
 };
 
-/**
- * @brief Token structure.
- */
 struct token {
   enum token_type type;
   const char *lexeme;
   int line;
 };
 
-/**
- * @brief Trie Data structure.
- */
 struct trie_node {
   enum token_type type;
   struct trie_node *children[128];
 };
 
 #endif /* _LEXER_H_ */
+

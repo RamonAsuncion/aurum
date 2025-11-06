@@ -12,21 +12,7 @@
 #include "memory.h"
 #include "hashmap.h"
 
-static Stack *stack;
-static Stack *loop_stack;
-static Stack *end_stack;
-
-static Token token;
-static Scanner scanner;
-
-static char memory[MEMORY_CAPACITY];
-
-HashMap *hashmap;
-
-typedef void (*action_func_t)(void);
-action_func_t* actions;
-
-void print_result(Stack *stack)
+static void print_result(struct stack *stack)
 {
   if (stack->size > 0)
     printf("%d\n", pop(stack));
@@ -34,325 +20,595 @@ void print_result(Stack *stack)
     fprintf(stderr, "Empty stack.\n");
 }
 
-void action_print(void)
+static void op_print(struct stack *stack)
 {
   print_result(stack);
 }
 
-void action_dump(void)
+static void op_dump(struct stack *stack)
 {
   dump(stack);
 }
 
-void action_while(void)
+static void op_while(struct stack *loop_stack, const struct scanner *scanner)
 {
-  if (top(loop_stack) != scanner.position)
-    push(loop_stack, scanner.position);
+  if (top(loop_stack) != scanner->position)
+    push(loop_stack, scanner->position);
 }
 
-void action_do(void)
+static void op_do(struct stack *stack, struct stack *loop_stack,
+    struct stack *end_stack, struct scanner *scanner)
 {
-  int condition = pop(stack);
+  int condition;
+  int keyword_length;
+
+  condition = pop(stack);
   if (condition == 0) {
     pop(loop_stack);
-    scanner.position = pop(end_stack);
-    int keyword_length = strlen("do") + 1;
-    scanner.current = scanner.source + scanner.position + keyword_length;
+    scanner->position = pop(end_stack);
+    keyword_length = strlen("do") + 1;
+    scanner->current = scanner->source + scanner->position +
+      keyword_length;
     pop(stack);
   }
 }
 
-void action_end(void)
+static void op_end(struct stack *stack, struct stack *loop_stack,
+    struct stack *end_stack, struct scanner *scanner)
 {
-  int loop_start = pop(loop_stack);
-  if (top(stack) != scanner.position)
-    push(end_stack, scanner.position);
-  scanner.position = loop_start;
-  scanner.current = scanner.source + scanner.position;
+  int loop_start;
+
+  loop_start = pop(loop_stack);
+  if (top(stack) != scanner->position)
+    push(end_stack, scanner->position);
+  scanner->position = loop_start;
+  scanner->current = scanner->source + scanner->position;
 }
 
-void action_number(void)
+static void op_number(struct stack *stack, const struct token *token)
 {
-  int value = (token.type == TOKEN_CHAR) ?
-    token.lexeme[0] : atoi(token.lexeme);
+  int value;
+
+  value = (token->type == TOKEN_CHAR) ?
+    token->lexeme[0] : atoi(token->lexeme);
   push(stack, value);
 }
 
-void action_arithmetic(void)
+static void op_arithmetic(struct stack *stack, const struct token *token)
 {
-  int b = pop(stack);
-  int a = pop(stack);
-  int result = 0;
+  int a;
+  int b;
+  int result;
 
-  switch (token.type) {
-    case TOKEN_ADD: result = a + b; break;
-    case TOKEN_SUBTRACT: result = a - b; break;
-    case TOKEN_MULTIPLY: result = a * b; break;
-    default: return;
+  b = pop(stack);
+  a = pop(stack);
+  result = 0;
+
+  switch (token->type) {
+  case TOKEN_ADD:
+    result = a + b;
+    break;
+  case TOKEN_SUBTRACT:
+    result = a - b;
+    break;
+  case TOKEN_MULTIPLY:
+    result = a * b;
+    break;
+  default:
+    return;
   }
 
   push(stack, result);
 }
 
-void action_comparison(void)
+static void op_comparison(struct stack *stack, const struct token *token)
 {
-  int b = pop(stack);
-  int a = pop(stack);
-  int result = 0;
+  int a;
+  int b;
+  int result;
 
-  switch (token.type) {
-    case TOKEN_EQUAL: result = (a == b); break;
-    case TOKEN_GREATER: result = (a > b); break;
-    case TOKEN_LESS: result = (a < b); break;
-    case TOKEN_GREATER_EQUAL: result = (a >= b); break;
-    case TOKEN_LESS_EQUAL: result = (a <= b); break;
-    default: return;
+  b = pop(stack);
+  a = pop(stack);
+  result = 0;
+
+  switch (token->type) {
+  case TOKEN_EQUAL:
+    result = (a == b);
+    break;
+  case TOKEN_GREATER:
+    result = (a > b);
+    break;
+  case TOKEN_LESS:
+    result = (a < b);
+    break;
+  case TOKEN_GREATER_EQUAL:
+    result = (a >= b);
+    break;
+  case TOKEN_LESS_EQUAL:
+    result = (a <= b);
+    break;
+  default:
+    return;
   }
 
   push(stack, result);
 }
 
-void action_bitwise(void)
+static void op_bitwise(struct stack *stack, const struct token *token)
 {
-  int b = pop(stack);
-  int a = pop(stack);
-  int result = 0;
+  int a;
+  int b;
+  int result;
 
-  switch (token.type) {
-    case TOKEN_BITWISE_AND: result = a & b; break;
-    case TOKEN_BITWISE_OR: result = a | b; break;
-    case TOKEN_BITWISE_XOR: result = a ^ b; break;
-    case TOKEN_BITWISE_NOT: result = ~a; push(stack, result); return;
-    default: return;
+  b = pop(stack);
+  a = pop(stack);
+  result = 0;
+
+  switch (token->type) {
+  case TOKEN_BITWISE_AND:
+    result = a & b;
+    break;
+  case TOKEN_BITWISE_OR:
+    result = a | b;
+    break;
+  case TOKEN_BITWISE_XOR:
+    result = a ^ b;
+    break;
+  case TOKEN_BITWISE_NOT:
+    result = ~a;
+    push(stack, result);
+    return;
+  default:
+    return;
   }
 
   push(stack, result);
 }
 
-void action_memory(void)
+static void op_memory(struct stack *stack, char *memory)
 {
   push(stack, (intptr_t)memory);
 }
 
-void action_syscall(void)
+static void op_syscall(struct stack *stack, char *memory)
 {
   int args[3];
-  int argument_count = pop(stack);
+  int argument_count;
+  int syscall_number;
+
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: stack has %d items before syscall\n", stack->size);
+#endif
+  argument_count = pop(stack);
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: argument_count=%d\n", argument_count);
+#endif
 
   if (argument_count < 1 || argument_count > 3) {
     fprintf(stderr, "Invalid number of arguments for syscall.\n");
     exit(1);
   }
 
-  for (int i = 0; i < argument_count; ++i) {
-    args[i] = pop(stack);
-  }
+  syscall_number = pop(stack);
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: syscall_number=%d\n", syscall_number);
+#endif
 
-  int syscall_number = pop(stack);
+  args[0] = pop(stack);
+
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: args[0]=%d\n", args[0]);
+#endif
+  args[1] = (argument_count >= 2) ? pop(stack) : 0;
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: args[1]=%d\n", args[1]);
+#endif
+  args[2] = (argument_count >= 3) ? pop(stack) : 0;
+#ifdef DEBUG
+  fprintf(stderr, "[debug] syscall: args[2]=%d\n", args[2]);
+#endif
   switch (syscall_number) {
-    case SYS_READ: {
-      int fd = args[0], buf = args[1], count = args[2];
-      char* data = malloc(count * sizeof(char));
-      int bytes_read = read(fd, data, count);
-      memcpy(memory + buf, data, bytes_read);
-      free(data);
-      push(stack, bytes_read);
-      break;
-    }
-    case SYS_WRITE: {
-      int fd = args[0], buf = args[1], count = args[2];
-      int bytes_written = write(fd, memory + buf, count);
-      push(stack, bytes_written);
-      break;
-    }
-    case SYS_EXIT: exit(args[0]);
+  case SYS_READ: {
+    int fd;
+    int buf;
+    int count;
+    char *data;
+    int bytes_read;
+
+    fd = args[0];
+    buf = args[1];
+    count = args[2];
+    data = malloc(count * sizeof(char));
+    bytes_read = read(fd, data, count);
+    memcpy(memory + buf, data, bytes_read);
+    free(data);
+    push(stack, bytes_read);
+    break;
+  }
+  case SYS_WRITE: {
+    int fd;
+    int buf;
+    int count;
+    int bytes_written;
+
+    fd = args[0];
+    buf = args[1];
+    count = args[2];
+    bytes_written = write(fd, memory + buf, count);
+    push(stack, bytes_written);
+    break;
+  }
+  case SYS_EXIT:
+    exit(args[0]);
   }
 }
 
-void action_include(void)
+static void op_include(struct scanner *scanner)
 {
-  const char* filename = scan_token(&scanner).lexeme;
-  size_t filename_length = strlen(filename);
-  char* cleaned_filename = malloc(filename_length - 1);
+  const char *filename;
+  size_t filename_length;
+  char *cleaned_filename;
+  FILE *file;
+  int file_size;
+  char *buffer;
+  int position;
+  char *new_source;
+  int i;
+
+  filename = scan_token(scanner).lexeme;
+  filename_length = strlen(filename);
+  cleaned_filename = malloc(filename_length - 1);
   strncpy(cleaned_filename, filename + 1, filename_length - 2);
   cleaned_filename[filename_length - 2] = '\0';
 
-  FILE* file = fopen(cleaned_filename, "r");
+  file = fopen(cleaned_filename, "r");
   if (!file) {
     fprintf(stderr, "Could not open file: %s\n", cleaned_filename);
     exit(1);
   }
 
   fseek(file, 0L, SEEK_END);
-  int file_size = ftell(file);
+  file_size = ftell(file);
   rewind(file);
 
-  char* buffer = malloc(file_size + 1);
+  buffer = malloc(file_size + 1);
   fread(buffer, sizeof(char), file_size, file);
   buffer[file_size] = '\0';
   fclose(file);
 
-  for (int i = 0; i < file_size; ++i) {
-    if (buffer[i] == '\n') buffer[i] = ' ';
+  for (i = 0; i < file_size; ++i) {
+    if (buffer[i] == '\n')
+      buffer[i] = ' ';
   }
 
-  int position = scanner.position + strlen(cleaned_filename) + 2;
-  char* new_source = malloc(strlen(scanner.source) + strlen(buffer) + 1);
-  strncpy(new_source, scanner.source, position);
+  position = scanner->position + strlen(cleaned_filename) + 2;
+  new_source = malloc(strlen(scanner->source) + strlen(buffer) + 1);
+  strncpy(new_source, scanner->source, position);
   strcat(new_source, buffer);
-  strcat(new_source, scanner.source + position);
+  strcat(new_source, scanner->source + position);
 
-  scanner.source = new_source;
-  scanner.current = new_source + position;
+  scanner->source = new_source;
+  scanner->current = new_source + position;
 
   free(buffer);
   free(cleaned_filename);
 }
 
-void action_define(void)
+static void op_define(struct scanner *scanner, struct hashmap *hashmap)
 {
-  Token macro_name = scan_token(&scanner);
-  Token* macros = malloc(sizeof(Token) * 100);
-  int i = 0;
+  struct token macro_name;
+  struct token *macros;
+  int i;
+  struct token temp_token;
 
-  while ((token = scan_token(&scanner)).type != TOKEN_END) {
-    macros[i++] = token;
-  }
+  macro_name = scan_token(scanner);
+  macros = malloc(sizeof(struct token) * 100);
+  i = 0;
 
+  while ((temp_token = scan_token(scanner)).type != TOKEN_END)
+    macros[i++] = temp_token;
+
+#ifdef DEBUG
+  fprintf(stderr, "[debug] define: macro '%s' with %d tokens\n",
+      macro_name.lexeme, i);
+#endif
   hashmap_insert(hashmap, macro_name.lexeme, macros, i);
 }
 
-void action_macro(void)
+static void op_string_literal(struct stack *stack, char *memory,
+    const struct token *token);
+
+static void execute_token(struct stack *stack, struct stack *loop_stack,
+    struct stack *end_stack, struct scanner *scanner,
+    struct hashmap *hashmap, char *memory,
+    const struct token *token);
+
+static void op_macro(struct stack *stack, struct stack *loop_stack,
+    struct stack *end_stack, struct scanner *scanner,
+    struct hashmap *hashmap, char *memory,
+    const struct token *token)
 {
-  const char* macro_name = token.lexeme;
-  Macro* macro = hashmap_get(hashmap, macro_name);
+  const char *macro_name;
+  struct macro *macro;
+  int i;
+
+  macro_name = token->lexeme;
+#ifdef DEBUG
+  fprintf(stderr, "[debug] macro: looking up '%s'\n", macro_name);
+#endif
+  macro = hashmap_get(hashmap, macro_name);
 
   if (!macro) {
-    fprintf(stderr, "Error: Macro '%s' not found.\n", macro_name);
-    return;
+    fprintf(stderr, "Error: Unknown identifier '%s'\n", macro_name);
+    exit(1);
   }
 
-  for (int i = 0; i < macro->numTokens; ++i) {
-    if (isdigit(macro->tokens[i].lexeme[0])) {
-      push(stack, atoi(macro->tokens[i].lexeme));
-    } else {
-      action_func_t action = actions[macro->tokens[i].type];
-      if (action) action();
-    }
+#ifdef DEBUG
+  fprintf(stderr, "[debug] macro: found '%s' with %d tokens\n",
+      macro_name, macro->num_tokens);
+#endif
+
+  for (i = 0; i < macro->num_tokens; ++i) {
+#ifdef DEBUG
+    fprintf(stderr, "[debug] macro: executing token %d: type=%d, lexeme='%s'\n",
+        i, macro->tokens[i].type, macro->tokens[i].lexeme);
+#endif
+    execute_token(stack, loop_stack, end_stack, scanner, hashmap,
+        memory, &macro->tokens[i]);
   }
 }
 
-void action_dup(void)
+static void op_dup(struct stack *stack)
 {
-  int a = pop(stack);
+  int a;
+
+  a = pop(stack);
+
   push(stack, a);
   push(stack, a);
 }
 
-void action_two_dup(void)
+static void op_two_dup(struct stack *stack)
 {
-  int b = pop(stack);
-  int a = pop(stack);
+  int a;
+  int b;
+
+  b = pop(stack);
+  a = pop(stack);
+
   push(stack, a);
   push(stack, b);
   push(stack, a);
   push(stack, b);
 }
 
-void action_drop(void)
+static void op_drop(struct stack *stack)
 {
   pop(stack);
 }
 
-void action_two_drop(void)
+static void op_two_drop(struct stack *stack)
 {
   pop(stack);
   pop(stack);
 }
 
-void action_swap(void)
+static void op_swap(struct stack *stack)
 {
-  int b = pop(stack);
-  int a = pop(stack);
+  int a;
+  int b;
+
+  b = pop(stack);
+  a = pop(stack);
+
   push(stack, b);
   push(stack, a);
 }
 
-void action_two_swap(void)
+static void op_two_swap(struct stack *stack)
 {
-  int d = pop(stack);
-  int c = pop(stack);
-  int b = pop(stack);
-  int a = pop(stack);
+  int a;
+  int b;
+  int c;
+  int d;
+
+  d = pop(stack);
+  c = pop(stack);
+  b = pop(stack);
+  a = pop(stack);
+
   push(stack, c);
   push(stack, d);
   push(stack, a);
   push(stack, b);
 }
 
-void action_over(void)
+static void op_over(struct stack *stack)
 {
-  int b = pop(stack);
-  int a = pop(stack);
+  int a;
+  int b;
+
+  b = pop(stack);
+  a = pop(stack);
+
   push(stack, a);
   push(stack, b);
   push(stack, a);
 }
 
-void action_two_over(void)
+static void op_two_over(struct stack *stack)
 {
-  int c = pop(stack);
-  int b = pop(stack);
-  int a = pop(stack);
-  push(stack, a);
-  push(stack, b);
-  push(stack, c);
-  push(stack, a);
-  push(stack, b);
-  push(stack, c);
-}
+  int a;
+  int b;
+  int c;
 
-void action_rot(void)
-{
-  int c = pop(stack);
-  int b = pop(stack);
-  int a = pop(stack);
+  c = pop(stack);
+  b = pop(stack);
+  a = pop(stack);
+
+  push(stack, a);
   push(stack, b);
   push(stack, c);
   push(stack, a);
+  push(stack, b);
+  push(stack, c);
 }
 
-void action_peek(void)
+static void op_rot(struct stack *stack)
 {
-  int a = pop(stack);
+  int a;
+  int b;
+  int c;
+
+  c = pop(stack);
+  b = pop(stack);
+  a = pop(stack);
+
+  push(stack, b);
+  push(stack, c);
   push(stack, a);
 }
 
-void action_string_literal(void)
+static void op_peek(struct stack *stack)
 {
-  int memory_index = 0;
-  int string_length = strlen(token.lexeme);
-  char* string = malloc((string_length + 1) * sizeof(char));
-  strcpy(string, token.lexeme);
+  int a;
 
-  char* literal = string + 1;
+  a = pop(stack);
+  push(stack, a);
+}
+
+static void execute_token(struct stack *stack, struct stack *loop_stack,
+    struct stack *end_stack, struct scanner *scanner,
+    struct hashmap *hashmap, char *memory,
+    const struct token *token)
+{
+  switch (token->type) {
+  case TOKEN_NUMBER:
+  case TOKEN_CHAR:
+    op_number(stack, token);
+    break;
+  case TOKEN_ADD:
+  case TOKEN_SUBTRACT:
+  case TOKEN_MULTIPLY:
+    op_arithmetic(stack, token);
+    break;
+  case TOKEN_QUESTION:
+    op_print(stack);
+    break;
+  case TOKEN_WHILE:
+    op_while(loop_stack, scanner);
+    break;
+  case TOKEN_DO:
+    op_do(stack, loop_stack, end_stack, scanner);
+    break;
+  case TOKEN_DUMP:
+    op_dump(stack);
+    break;
+  case TOKEN_END:
+    op_end(stack, loop_stack, end_stack, scanner);
+    break;
+  case TOKEN_EQUAL:
+  case TOKEN_GREATER:
+  case TOKEN_LESS:
+  case TOKEN_GREATER_EQUAL:
+  case TOKEN_LESS_EQUAL:
+    op_comparison(stack, token);
+    break;
+  case TOKEN_BITWISE_AND:
+  case TOKEN_BITWISE_OR:
+  case TOKEN_BITWISE_XOR:
+  case TOKEN_BITWISE_NOT:
+    op_bitwise(stack, token);
+    break;
+  case TOKEN_STRING_LITERAL:
+    op_string_literal(stack, memory, token);
+    break;
+  case TOKEN_SYSCALL:
+    op_syscall(stack, memory);
+    break;
+  case TOKEN_DEFINE:
+    op_define(scanner, hashmap);
+    break;
+  case TOKEN_INCLUDE:
+    op_include(scanner);
+    break;
+  case TOKEN_MEMORY:
+    op_memory(stack, memory);
+    break;
+  case TOKEN_DUP:
+    op_dup(stack);
+    break;
+  case TOKEN_TWO_DUP:
+    op_two_dup(stack);
+    break;
+  case TOKEN_DROP:
+    op_drop(stack);
+    break;
+  case TOKEN_TWO_DROP:
+    op_two_drop(stack);
+    break;
+  case TOKEN_SWAP:
+    op_swap(stack);
+    break;
+  case TOKEN_TWO_SWAP:
+    op_two_swap(stack);
+    break;
+  case TOKEN_OVER:
+    op_over(stack);
+    break;
+  case TOKEN_TWO_OVER:
+    op_two_over(stack);
+    break;
+  case TOKEN_ROT:
+    op_rot(stack);
+    break;
+  case TOKEN_PEEK:
+    op_peek(stack);
+    break;
+  case TOKEN_IDENTIFIER:
+    op_macro(stack, loop_stack, end_stack, scanner, hashmap,
+        memory, token);
+    break;
+  default:
+    fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n",
+        scanner->line, scanner->column, token->lexeme);
+    exit(1);
+  }
+}
+
+static void op_string_literal(struct stack *stack, char *memory,
+    const struct token *token)
+{
+  int memory_index;
+  int string_length;
+  char *string;
+  char *literal;
+  int literal_length;
+  int i;
+
+  memory_index = 0;
+  string_length = strlen(token->lexeme);
+  string = malloc((string_length + 1) * sizeof(char));
+  strcpy(string, token->lexeme);
+
+  literal = string + 1;
   literal[string_length - 2] = '\0';
 
-  int literal_length = strlen(literal);
-  for (int i = 0; i < literal_length; ++i) {
+  literal_length = strlen(literal);
+  for (i = 0; i < literal_length; ++i) {
     if (literal[i] == '\\') {
       switch (literal[i + 1]) {
-        case 'n':
-          memory[memory_index++] = '\n';
-          i++;
-          break;
-        case 't':
-          memory[memory_index++] = '\t';
-          i++;
-          break;
-        default:
-          memory[memory_index++] = literal[i];
-          break;
+      case 'n':
+        memory[memory_index++] = '\n';
+        i++;
+        break;
+      case 't':
+        memory[memory_index++] = '\t';
+        i++;
+        break;
+      default:
+        memory[memory_index++] = literal[i];
+        break;
       }
     } else {
       memory[memory_index++] = literal[i];
@@ -360,77 +616,53 @@ void action_string_literal(void)
   }
   memory[memory_index] = '\0';
 
-  push(stack, literal_length);
-  push(stack, memory_index - literal_length);
+#ifdef DEBUG
+  fprintf(stderr, "[debug] string_literal: wrote '%s' to memory[0-%d], pushing length=%d, start=%d\n",
+      memory, memory_index-1, memory_index, 0);
+  fprintf(stderr, "[debug] string_literal: stack before push has %d items\n", stack->size);
+#endif
+  push(stack, memory_index);
+  push(stack, 0);
+#ifdef DEBUG
+  fprintf(stderr, "[debug] string_literal: stack after push has %d items\n", stack->size);
+#endif
 
   free(string);
 }
 
-
-void free_resources(void)
+void run_interpreter(const char *source_code)
 {
-  while (stack->size > 0) pop(stack);
-  free(stack);
-  free(loop_stack);
-  free(end_stack);
-  hashmap_free(hashmap);
-}
+  struct scanner scanner;
+  struct token token;
+  struct stack *stack;
+  struct stack *loop_stack;
+  struct stack *end_stack;
+  struct hashmap *hashmap;
+  char *memory;
 
-void run_interpreter(const char *source_code) {
   stack = create_stack();
   loop_stack = create_stack();
   end_stack = create_stack();
   hashmap = hashmap_create();
+  memory = malloc(MEMORY_CAPACITY);
 
   init_scanner(&scanner, source_code);
 
-
-  actions = (action_func_t[]) {
-    [TOKEN_NUMBER] = action_number,
-    [TOKEN_ADD] = action_arithmetic,
-    [TOKEN_SUBTRACT] = action_arithmetic,
-    [TOKEN_MULTIPLY] = action_arithmetic,
-    [TOKEN_QUESTION] = action_print,
-    [TOKEN_WHILE] = action_while,
-    [TOKEN_DO] = action_do,
-    [TOKEN_DUMP] = action_dump,
-    [TOKEN_END] = action_end,
-    [TOKEN_GREATER] = action_comparison,
-    [TOKEN_GREATER_EQUAL] = action_comparison,
-    [TOKEN_LESS] = action_comparison,
-    [TOKEN_EQUAL] = action_comparison,
-    [TOKEN_LESS_EQUAL] = action_comparison,
-    [TOKEN_BITWISE_AND] = action_bitwise,
-    [TOKEN_BITWISE_OR] = action_bitwise,
-    [TOKEN_BITWISE_XOR] = action_bitwise,
-    [TOKEN_BITWISE_NOT] = action_bitwise,
-    [TOKEN_STRING_LITERAL] = action_string_literal,
-    [TOKEN_SYSCALL] = action_syscall,
-    [TOKEN_DEFINE] = action_define,
-    [TOKEN_MACRO] = action_macro,
-    [TOKEN_INCLUDE] = action_include,
-    [TOKEN_DUP] = action_dup,
-    [TOKEN_TWO_DUP] = action_two_dup,
-    [TOKEN_DROP] = action_drop,
-    [TOKEN_TWO_DROP] = action_two_drop,
-    [TOKEN_SWAP] = action_swap,
-    [TOKEN_TWO_SWAP] = action_two_swap,
-    [TOKEN_OVER] = action_over,
-    [TOKEN_TWO_OVER] = action_two_over,
-    [TOKEN_ROT] = action_rot,
-    [TOKEN_PEEK] = action_peek,
-  };
-
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
-    action_func_t action = actions[token.type];
-    if (action) {
-      action();
-    } else {
-      fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n",
-              scanner.line, scanner.column, token.lexeme);
-      exit(1);
-    }
+#ifdef DEBUG
+    fprintf(stderr, "[debug] main_loop: executing type=%d, lexeme='%s'\n",
+        token.type, token.lexeme);
+#endif
+    execute_token(stack, loop_stack, end_stack, &scanner, hashmap,
+        memory, &token);
   }
 
-  free_resources();
+  while (stack->size > 0)
+    pop(stack);
+  free(stack);
+  free(loop_stack);
+  free(end_stack);
+  hashmap_free(hashmap);
+  free(memory);
 }
+

@@ -12,7 +12,7 @@
  * @brief Display the memory content.
  * @param memory The memory to display.
  * @param size The size of the memory.
-*/
+ */
 void print_memory(char *memory, int size);
 
 #endif /* _MEMORY_H_ */

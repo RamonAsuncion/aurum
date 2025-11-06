@@ -1,4 +1,18 @@
-CFLAGS=-Isrc -Wall -Wextra # -g -DDEBUG
+CFLAGS := -Isrc -std=c11 -g3 -O2 \
+          -Wall -Wextra -Wpedantic \
+          -Wconversion -Wdouble-promotion \
+          -Wformat=2 -Wshadow -Wwrite-strings \
+          -Wstrict-prototypes -Wold-style-definition \
+          -Wredundant-decls -Wnested-externs \
+          -Wmissing-include-dirs \
+          -Wno-unused-function -Wno-unused-parameter -Wno-sign-conversion \
+          -fsanitize=undefined -fsanitize-trap
+# -DDEBUG
+
+ifeq ($(CC),gcc)
+  CFLAGS += -Wjump-misses-init -Wlogical-op
+endif
+
 SRC=src
 BIN=bin
 OBJ=obj
