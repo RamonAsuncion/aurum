@@ -1,4 +1,4 @@
-memory .
+memory ?
 
 // write a b c
 memory 0 + 97 store

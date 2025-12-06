@@ -65,7 +65,7 @@ struct macro *hashmap_get(struct hashmap *map, const char *key)
   size_t start_index;
 
   if (!map) {
-    fprintf(stderr, "Error: Map is null.\n");
+    fprintf(stderr, "[aurum] hashmap is null.\n");
     return NULL;
   }
 #ifdef DEBUG

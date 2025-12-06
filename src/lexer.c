@@ -188,7 +188,7 @@ struct token create_token(enum token_type type, struct scanner *scanner)
 
 void update_position(struct scanner *scanner)
 {
-  scanner->position = scanner->current - scanner->source;
+  scanner->position = (intptr_t)(scanner->current - scanner->source);
 }
 
 struct token scan_token(struct scanner *scanner)

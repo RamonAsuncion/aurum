@@ -19,7 +19,7 @@ static char *read_line(void)
   int c;
 
   if (!buffer) {
-    fprintf(stderr, "Aurum: allocation error\n");
+    fprintf(stderr, "[aurum] read_line allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -33,7 +33,7 @@ static char *read_line(void)
       buffer[position] = '\0';
       return buffer;
     } else {
-      buffer[position] = c;
+      buffer[position] = (char)c;
     }
     position++;
 
@@ -41,7 +41,7 @@ static char *read_line(void)
       bufsize += RL_BUFSIZE;
       buffer = realloc(buffer, bufsize);
       if (!buffer) {
-        fprintf(stderr, "Aurum: allocation error\n");
+        fprintf(stderr, "[aurum] read_line allocation error\n");
         exit(EXIT_FAILURE);
       }
     }

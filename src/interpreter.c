@@ -11,13 +11,14 @@
 #include "interpreter.h"
 #include "memory.h"
 #include "hashmap.h"
+#include <inttypes.h>
 
 static void print_result(struct stack *stack)
 {
   if (stack->size > 0)
-    printf("%d\n", stack_pop(stack));
+    printf("%" PRIdPTR "\n", stack_pop(stack));
   else
-    fprintf(stderr, "Empty stack.\n");
+    fprintf(stderr, "[aurum] empty stack.\n");
 }
 
 static void op_print(struct stack *stack)
@@ -27,7 +28,7 @@ static void op_print(struct stack *stack)
 
 static void op_dump(struct stack *stack)
 {
-  dump(stack);
+  stack_dump(stack);
 }
 
 static void op_while(struct stack *loop_stack, const struct scanner *scanner)
@@ -39,7 +40,7 @@ static void op_while(struct stack *loop_stack, const struct scanner *scanner)
 static void op_do(struct stack *stack, struct stack *loop_stack,
     struct stack *end_stack, struct scanner *scanner)
 {
-  int condition;
+  intptr_t condition;
   int keyword_length;
 
   condition = stack_pop(stack);
@@ -56,7 +57,7 @@ static void op_do(struct stack *stack, struct stack *loop_stack,
 static void op_end(struct stack *stack, struct stack *loop_stack,
     struct stack *end_stack, struct scanner *scanner)
 {
-  int loop_start;
+  intptr_t loop_start;
 
   loop_start = stack_pop(loop_stack);
   if (stack_top(stack) != scanner->position)
@@ -67,18 +68,17 @@ static void op_end(struct stack *stack, struct stack *loop_stack,
 
 static void op_number(struct stack *stack, const struct token *token)
 {
-  int value;
+  intptr_t value;
 
-  value = (token->type == TOKEN_CHAR) ?
-    token->lexeme[0] : atoi(token->lexeme);
+  value = (token->type == TOKEN_CHAR) ? (intptr_t)token->lexeme[0] : (intptr_t)atoi(token->lexeme);
   stack_push(stack, value);
 }
 
 static void op_arithmetic(struct stack *stack, const struct token *token)
 {
-  int a;
-  int b;
-  int result;
+  intptr_t a;
+  intptr_t b;
+  intptr_t result;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -103,9 +103,9 @@ static void op_arithmetic(struct stack *stack, const struct token *token)
 
 static void op_comparison(struct stack *stack, const struct token *token)
 {
-  int a;
-  int b;
-  int result;
+  intptr_t a;
+  intptr_t b;
+  intptr_t result;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -136,9 +136,9 @@ static void op_comparison(struct stack *stack, const struct token *token)
 
 static void op_bitwise(struct stack *stack, const struct token *token)
 {
-  int a;
-  int b;
-  int result;
+  intptr_t a;
+  intptr_t b;
+  intptr_t result;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -165,24 +165,32 @@ static void op_bitwise(struct stack *stack, const struct token *token)
   stack_push(stack, result);
 }
 
-//static void op_store(struct stack *stack, char *memory)
-//{
-//  char byte = stack_pop(stack);
-//  intptr_t addr = stack_pop(stack);
-//  memory[addr] = byte & 0xFF;
-//}
-//
-//static void op_fetch(struct stack *stack, char *memory)
-//{
-//  intptr_t addr = stack_pop(stack);
-//  char byte = memory[addr];
-//  stack_push(stack, byte);
-//}
+static void op_store(struct stack *stack, char *memory)
+{
+  intptr_t raw_byte = stack_pop(stack);
+  char byte = (char)raw_byte;
+  intptr_t addr = stack_pop(stack);
+  if (addr < 0 || (size_t)addr >= MEMORY_CAPACITY) {
+    fprintf(stderr, "[aurum] invalid memory address: %ld\n", (long)addr);
+    exit(1);
+  }
+  memory[(size_t)addr] = (char)(byte & 0xFF);
+}
+
+static void op_fetch(struct stack *stack, char *memory)
+{
+  intptr_t addr = stack_pop(stack);
+  if (addr < 0 || (size_t)addr >= MEMORY_CAPACITY) {
+    fprintf(stderr, "[aurum] invalid memory address: %ld\n", (long)addr);
+    exit(1);
+  }
+  char byte = memory[(size_t)addr];
+  stack_push(stack, (intptr_t)byte);
+}
 
 static void op_memory(struct stack *stack, char *memory)
 {
-  printf("memory operation: %s", memory);
-  stack_push(stack, (intptr_t)memory);
+  stack_push(stack, (intptr_t)0);
 }
 
 static void op_syscall(struct stack *stack, char *memory)
@@ -194,31 +202,31 @@ static void op_syscall(struct stack *stack, char *memory)
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: stack has %d items before syscall\n", stack->size);
 #endif
-  argument_count = stack_pop(stack);
+  argument_count = (int)stack_pop(stack);
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: argument_count=%d\n", argument_count);
 #endif
 
   if (argument_count < 1 || argument_count > 3) {
-    fprintf(stderr, "Invalid number of arguments for syscall.\n");
+    fprintf(stderr, "[aurum] invalid number of arguments: %d.\n", argument_count);
     exit(1);
   }
 
-  syscall_number = stack_pop(stack);
+  syscall_number = (int)stack_pop(stack);
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: syscall_number=%d\n", syscall_number);
 #endif
 
-  args[0] = stack_pop(stack);
+  args[0] = (int)stack_pop(stack);
 
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[0]=%d\n", args[0]);
 #endif
-  args[1] = (argument_count >= 2) ? stack_pop(stack) : 0;
+  args[1] = (argument_count >= 2) ? (int)stack_pop(stack) : 0;
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[1]=%d\n", args[1]);
 #endif
-  args[2] = (argument_count >= 3) ? stack_pop(stack) : 0;
+  args[2] = (argument_count >= 3) ? (int)stack_pop(stack) : 0;
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[2]=%d\n", args[2]);
 #endif
@@ -233,11 +241,11 @@ static void op_syscall(struct stack *stack, char *memory)
     fd = args[0];
     buf = args[1];
     count = args[2];
-    data = malloc(count * sizeof(char));
-    bytes_read = read(fd, data, count);
-    memcpy(memory + buf, data, bytes_read);
+    data = malloc((size_t)count * sizeof(char));
+    bytes_read = (int)read(fd, data, (size_t)count);
+    memcpy(memory + (size_t)buf, data, (size_t)bytes_read);
     free(data);
-    stack_push(stack, bytes_read);
+    stack_push(stack, (intptr_t)bytes_read);
     break;
   }
   case SYS_WRITE: {
@@ -249,8 +257,8 @@ static void op_syscall(struct stack *stack, char *memory)
     fd = args[0];
     buf = args[1];
     count = args[2];
-    bytes_written = write(fd, memory + buf, count);
-    stack_push(stack, bytes_written);
+    bytes_written = (int)write(fd, memory + (size_t)buf, (size_t)count);
+    stack_push(stack, (intptr_t)bytes_written);
     break;
   }
   case SYS_EXIT:
@@ -264,9 +272,9 @@ static void op_include(struct scanner *scanner)
   size_t filename_length;
   char *cleaned_filename;
   FILE *file;
-  int file_size;
+  long file_size;
   char *buffer;
-  int position;
+  intptr_t position;
   char *new_source;
   int i;
 
@@ -278,7 +286,7 @@ static void op_include(struct scanner *scanner)
 
   file = fopen(cleaned_filename, "r");
   if (!file) {
-    fprintf(stderr, "Could not open file: %s\n", cleaned_filename);
+    fprintf(stderr, "[aurum] failed to open file: %s\n", cleaned_filename);
     exit(1);
   }
 
@@ -286,19 +294,19 @@ static void op_include(struct scanner *scanner)
   file_size = ftell(file);
   rewind(file);
 
-  buffer = malloc(file_size + 1);
-  fread(buffer, sizeof(char), file_size, file);
+  buffer = malloc((size_t)file_size + 1);
+  fread(buffer, sizeof(char), (size_t)file_size, file);
   buffer[file_size] = '\0';
   fclose(file);
 
-  for (i = 0; i < file_size; ++i) {
+  for (i = 0; i < (int)file_size; ++i) {
     if (buffer[i] == '\n')
       buffer[i] = ' ';
   }
 
-  position = scanner->position + strlen(cleaned_filename) + 2;
+  position = scanner->position + (intptr_t)strlen(cleaned_filename) + 2;
   new_source = malloc(strlen(scanner->source) + strlen(buffer) + 1);
-  strncpy(new_source, scanner->source, position);
+  strncpy(new_source, scanner->source, (size_t)position);
   strcat(new_source, buffer);
   strcat(new_source, scanner->source + position);
 
@@ -354,7 +362,7 @@ static void op_macro(struct stack *stack, struct stack *loop_stack,
   macro = hashmap_get(hashmap, macro_name);
 
   if (!macro) {
-    fprintf(stderr, "Error: Unknown identifier '%s'\n", macro_name);
+    fprintf(stderr, "[aurum] unknown identifier: '%s'\n", macro_name);
     exit(1);
   }
 
@@ -375,7 +383,7 @@ static void op_macro(struct stack *stack, struct stack *loop_stack,
 
 static void op_dup(struct stack *stack)
 {
-  int a;
+  intptr_t a;
 
   a = stack_pop(stack);
 
@@ -385,8 +393,8 @@ static void op_dup(struct stack *stack)
 
 static void op_two_dup(struct stack *stack)
 {
-  int a;
-  int b;
+  intptr_t a;
+  intptr_t b;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -410,8 +418,8 @@ static void op_two_drop(struct stack *stack)
 
 static void op_swap(struct stack *stack)
 {
-  int a;
-  int b;
+  intptr_t a;
+  intptr_t b;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -422,10 +430,10 @@ static void op_swap(struct stack *stack)
 
 static void op_two_swap(struct stack *stack)
 {
-  int a;
-  int b;
-  int c;
-  int d;
+  intptr_t a;
+  intptr_t b;
+  intptr_t c;
+  intptr_t d;
 
   d = stack_pop(stack);
   c = stack_pop(stack);
@@ -440,8 +448,8 @@ static void op_two_swap(struct stack *stack)
 
 static void op_over(struct stack *stack)
 {
-  int a;
-  int b;
+  intptr_t a;
+  intptr_t b;
 
   b = stack_pop(stack);
   a = stack_pop(stack);
@@ -453,9 +461,9 @@ static void op_over(struct stack *stack)
 
 static void op_two_over(struct stack *stack)
 {
-  int a;
-  int b;
-  int c;
+  intptr_t a;
+  intptr_t b;
+  intptr_t c;
 
   c = stack_pop(stack);
   b = stack_pop(stack);
@@ -471,9 +479,9 @@ static void op_two_over(struct stack *stack)
 
 static void op_rot(struct stack *stack)
 {
-  int a;
-  int b;
-  int c;
+  intptr_t a;
+  intptr_t b;
+  intptr_t c;
 
   c = stack_pop(stack);
   b = stack_pop(stack);
@@ -486,7 +494,7 @@ static void op_rot(struct stack *stack)
 
 static void op_peek(struct stack *stack)
 {
-  int a;
+  intptr_t a;
 
   a = stack_pop(stack);
   stack_push(stack, a);
@@ -591,7 +599,7 @@ static void execute_token(struct stack *stack, struct stack *loop_stack,
         memory, token);
     break;
   default:
-    fprintf(stderr, "[%d:%d] ERROR: Unknown token type: %s\n",
+    fprintf(stderr, "[aurum](%d:%d) unknown token type: %s\n",
         scanner->line, scanner->column, token->lexeme);
     exit(1);
   }
@@ -600,12 +608,12 @@ static void execute_token(struct stack *stack, struct stack *loop_stack,
 static void op_string_literal(struct stack *stack, char *memory,
     const struct token *token)
 {
-  int memory_index;
-  int string_length;
+  size_t memory_index;
+  size_t string_length;
   char *string;
   char *literal;
-  int literal_length;
-  int i;
+  size_t literal_length;
+  size_t i;
 
   memory_index = 0;
   string_length = strlen(token->lexeme);
@@ -642,7 +650,7 @@ static void op_string_literal(struct stack *stack, char *memory,
       memory, memory_index-1, memory_index, 0);
   fprintf(stderr, "[debug] string_literal: stack before push has %d items\n", stack->size);
 #endif
-  stack_push(stack, memory_index);
+  stack_push(stack, (intptr_t)memory_index);
   stack_push(stack, 0);
 #ifdef DEBUG
   fprintf(stderr, "[debug] string_literal: stack after push has %d items\n", stack->size);
@@ -665,7 +673,7 @@ void run_interpreter(const char *source_code)
   loop_stack = stack_create();
   end_stack = stack_create();
   hashmap = hashmap_create();
-  memory =( MEMORY_CAPACITY);
+  memory = memory_create(MEMORY_CAPACITY);
 
   init_scanner(&scanner, source_code);
 

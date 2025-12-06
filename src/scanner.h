@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "lexer.h"
+#include <stdint.h>
 
 struct scanner {
   const char *source;
@@ -12,7 +13,7 @@ struct scanner {
   int start_column;
   int column;
   int line;
-  int position;
+  intptr_t position;
 };
 
 /**

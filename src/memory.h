@@ -5,8 +5,9 @@
 #define SYS_WRITE 1
 #define SYS_EXIT  60
 
-// Should be enough...
-#define MEMORY_CAPACITY (250 * 1024 * 1024)
+#include <stdio.h>
+
+#define MEMORY_CAPACITY (64 * 1024)
 
 /**
  * @brief Display the memory content.
@@ -14,6 +15,11 @@
  * @param size The size of the memory.
  */
 void print_memory(char *memory, int size);
+
+/**
+ * @param n The number of bytes to allocate.
+ */
+void *memory_create(size_t n);
 
 #endif /* _MEMORY_H_ */
 
