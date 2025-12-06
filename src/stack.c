@@ -3,7 +3,7 @@
 
 #include "stack.h"
 
-struct stack *create_stack(void)
+struct stack *stack_create(void)
 {
   struct stack *stack;
 
@@ -15,7 +15,7 @@ struct stack *create_stack(void)
   return stack;
 }
 
-void push(struct stack *stack, int value)
+void stack_push(struct stack *stack, int value)
 {
   int new_capacity;
   int *new_data;
@@ -33,7 +33,7 @@ void push(struct stack *stack, int value)
   stack->data[stack->top] = value;
 }
 
-int pop(struct stack *stack)
+int stack_pop(struct stack *stack)
 {
   int popped_value;
 
@@ -45,12 +45,12 @@ int pop(struct stack *stack)
   return popped_value;
 }
 
-int top(struct stack *stack)
+int stack_top(struct stack *stack)
 {
   return stack->data[stack->top];
 }
 
-void dump(struct stack *stack)
+void stack_dump(struct stack *stack)
 {
   int size;
   int i;
@@ -68,7 +68,7 @@ void dump(struct stack *stack)
   printf("+---------+---------+\n");
 }
 
-bool is_empty(struct stack *stack)
+bool is_stack_empty(struct stack *stack)
 {
   return stack->size == 0;
 }

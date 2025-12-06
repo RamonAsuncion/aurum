@@ -15,7 +15,7 @@
 static void print_result(struct stack *stack)
 {
   if (stack->size > 0)
-    printf("%d\n", pop(stack));
+    printf("%d\n", stack_pop(stack));
   else
     fprintf(stderr, "Empty stack.\n");
 }
@@ -32,8 +32,8 @@ static void op_dump(struct stack *stack)
 
 static void op_while(struct stack *loop_stack, const struct scanner *scanner)
 {
-  if (top(loop_stack) != scanner->position)
-    push(loop_stack, scanner->position);
+  if (stack_top(loop_stack) != scanner->position)
+    stack_push(loop_stack, scanner->position);
 }
 
 static void op_do(struct stack *stack, struct stack *loop_stack,
@@ -42,14 +42,14 @@ static void op_do(struct stack *stack, struct stack *loop_stack,
   int condition;
   int keyword_length;
 
-  condition = pop(stack);
+  condition = stack_pop(stack);
   if (condition == 0) {
-    pop(loop_stack);
-    scanner->position = pop(end_stack);
+    stack_pop(loop_stack);
+    scanner->position = stack_pop(end_stack);
     keyword_length = strlen("do") + 1;
     scanner->current = scanner->source + scanner->position +
       keyword_length;
-    pop(stack);
+    stack_pop(stack);
   }
 }
 
@@ -58,9 +58,9 @@ static void op_end(struct stack *stack, struct stack *loop_stack,
 {
   int loop_start;
 
-  loop_start = pop(loop_stack);
-  if (top(stack) != scanner->position)
-    push(end_stack, scanner->position);
+  loop_start = stack_pop(loop_stack);
+  if (stack_top(stack) != scanner->position)
+    stack_push(end_stack, scanner->position);
   scanner->position = loop_start;
   scanner->current = scanner->source + scanner->position;
 }
@@ -71,7 +71,7 @@ static void op_number(struct stack *stack, const struct token *token)
 
   value = (token->type == TOKEN_CHAR) ?
     token->lexeme[0] : atoi(token->lexeme);
-  push(stack, value);
+  stack_push(stack, value);
 }
 
 static void op_arithmetic(struct stack *stack, const struct token *token)
@@ -80,8 +80,8 @@ static void op_arithmetic(struct stack *stack, const struct token *token)
   int b;
   int result;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
   result = 0;
 
   switch (token->type) {
@@ -98,7 +98,7 @@ static void op_arithmetic(struct stack *stack, const struct token *token)
     return;
   }
 
-  push(stack, result);
+  stack_push(stack, result);
 }
 
 static void op_comparison(struct stack *stack, const struct token *token)
@@ -107,8 +107,8 @@ static void op_comparison(struct stack *stack, const struct token *token)
   int b;
   int result;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
   result = 0;
 
   switch (token->type) {
@@ -131,7 +131,7 @@ static void op_comparison(struct stack *stack, const struct token *token)
     return;
   }
 
-  push(stack, result);
+  stack_push(stack, result);
 }
 
 static void op_bitwise(struct stack *stack, const struct token *token)
@@ -140,8 +140,8 @@ static void op_bitwise(struct stack *stack, const struct token *token)
   int b;
   int result;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
   result = 0;
 
   switch (token->type) {
@@ -156,18 +156,33 @@ static void op_bitwise(struct stack *stack, const struct token *token)
     break;
   case TOKEN_BITWISE_NOT:
     result = ~a;
-    push(stack, result);
+    stack_push(stack, result);
     return;
   default:
     return;
   }
 
-  push(stack, result);
+  stack_push(stack, result);
 }
+
+//static void op_store(struct stack *stack, char *memory)
+//{
+//  char byte = stack_pop(stack);
+//  intptr_t addr = stack_pop(stack);
+//  memory[addr] = byte & 0xFF;
+//}
+//
+//static void op_fetch(struct stack *stack, char *memory)
+//{
+//  intptr_t addr = stack_pop(stack);
+//  char byte = memory[addr];
+//  stack_push(stack, byte);
+//}
 
 static void op_memory(struct stack *stack, char *memory)
 {
-  push(stack, (intptr_t)memory);
+  printf("memory operation: %s", memory);
+  stack_push(stack, (intptr_t)memory);
 }
 
 static void op_syscall(struct stack *stack, char *memory)
@@ -179,7 +194,7 @@ static void op_syscall(struct stack *stack, char *memory)
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: stack has %d items before syscall\n", stack->size);
 #endif
-  argument_count = pop(stack);
+  argument_count = stack_pop(stack);
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: argument_count=%d\n", argument_count);
 #endif
@@ -189,21 +204,21 @@ static void op_syscall(struct stack *stack, char *memory)
     exit(1);
   }
 
-  syscall_number = pop(stack);
+  syscall_number = stack_pop(stack);
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: syscall_number=%d\n", syscall_number);
 #endif
 
-  args[0] = pop(stack);
+  args[0] = stack_pop(stack);
 
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[0]=%d\n", args[0]);
 #endif
-  args[1] = (argument_count >= 2) ? pop(stack) : 0;
+  args[1] = (argument_count >= 2) ? stack_pop(stack) : 0;
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[1]=%d\n", args[1]);
 #endif
-  args[2] = (argument_count >= 3) ? pop(stack) : 0;
+  args[2] = (argument_count >= 3) ? stack_pop(stack) : 0;
 #ifdef DEBUG
   fprintf(stderr, "[debug] syscall: args[2]=%d\n", args[2]);
 #endif
@@ -222,7 +237,7 @@ static void op_syscall(struct stack *stack, char *memory)
     bytes_read = read(fd, data, count);
     memcpy(memory + buf, data, bytes_read);
     free(data);
-    push(stack, bytes_read);
+    stack_push(stack, bytes_read);
     break;
   }
   case SYS_WRITE: {
@@ -235,7 +250,7 @@ static void op_syscall(struct stack *stack, char *memory)
     buf = args[1];
     count = args[2];
     bytes_written = write(fd, memory + buf, count);
-    push(stack, bytes_written);
+    stack_push(stack, bytes_written);
     break;
   }
   case SYS_EXIT:
@@ -362,10 +377,10 @@ static void op_dup(struct stack *stack)
 {
   int a;
 
-  a = pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, a);
-  push(stack, a);
+  stack_push(stack, a);
+  stack_push(stack, a);
 }
 
 static void op_two_dup(struct stack *stack)
@@ -373,24 +388,24 @@ static void op_two_dup(struct stack *stack)
   int a;
   int b;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, a);
-  push(stack, b);
-  push(stack, a);
-  push(stack, b);
+  stack_push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, a);
+  stack_push(stack, b);
 }
 
 static void op_drop(struct stack *stack)
 {
-  pop(stack);
+  stack_pop(stack);
 }
 
 static void op_two_drop(struct stack *stack)
 {
-  pop(stack);
-  pop(stack);
+  stack_pop(stack);
+  stack_pop(stack);
 }
 
 static void op_swap(struct stack *stack)
@@ -398,11 +413,11 @@ static void op_swap(struct stack *stack)
   int a;
   int b;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, b);
-  push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, a);
 }
 
 static void op_two_swap(struct stack *stack)
@@ -412,15 +427,15 @@ static void op_two_swap(struct stack *stack)
   int c;
   int d;
 
-  d = pop(stack);
-  c = pop(stack);
-  b = pop(stack);
-  a = pop(stack);
+  d = stack_pop(stack);
+  c = stack_pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, c);
-  push(stack, d);
-  push(stack, a);
-  push(stack, b);
+  stack_push(stack, c);
+  stack_push(stack, d);
+  stack_push(stack, a);
+  stack_push(stack, b);
 }
 
 static void op_over(struct stack *stack)
@@ -428,12 +443,12 @@ static void op_over(struct stack *stack)
   int a;
   int b;
 
-  b = pop(stack);
-  a = pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, a);
-  push(stack, b);
-  push(stack, a);
+  stack_push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, a);
 }
 
 static void op_two_over(struct stack *stack)
@@ -442,16 +457,16 @@ static void op_two_over(struct stack *stack)
   int b;
   int c;
 
-  c = pop(stack);
-  b = pop(stack);
-  a = pop(stack);
+  c = stack_pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, a);
-  push(stack, b);
-  push(stack, c);
-  push(stack, a);
-  push(stack, b);
-  push(stack, c);
+  stack_push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, c);
+  stack_push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, c);
 }
 
 static void op_rot(struct stack *stack)
@@ -460,21 +475,21 @@ static void op_rot(struct stack *stack)
   int b;
   int c;
 
-  c = pop(stack);
-  b = pop(stack);
-  a = pop(stack);
+  c = stack_pop(stack);
+  b = stack_pop(stack);
+  a = stack_pop(stack);
 
-  push(stack, b);
-  push(stack, c);
-  push(stack, a);
+  stack_push(stack, b);
+  stack_push(stack, c);
+  stack_push(stack, a);
 }
 
 static void op_peek(struct stack *stack)
 {
   int a;
 
-  a = pop(stack);
-  push(stack, a);
+  a = stack_pop(stack);
+  stack_push(stack, a);
 }
 
 static void execute_token(struct stack *stack, struct stack *loop_stack,
@@ -534,6 +549,12 @@ static void execute_token(struct stack *stack, struct stack *loop_stack,
     break;
   case TOKEN_MEMORY:
     op_memory(stack, memory);
+    break;
+  case TOKEN_STORE:
+    op_store(stack, memory);
+    break;
+  case TOKEN_FETCH:
+    op_fetch(stack, memory);
     break;
   case TOKEN_DUP:
     op_dup(stack);
@@ -621,8 +642,8 @@ static void op_string_literal(struct stack *stack, char *memory,
       memory, memory_index-1, memory_index, 0);
   fprintf(stderr, "[debug] string_literal: stack before push has %d items\n", stack->size);
 #endif
-  push(stack, memory_index);
-  push(stack, 0);
+  stack_push(stack, memory_index);
+  stack_push(stack, 0);
 #ifdef DEBUG
   fprintf(stderr, "[debug] string_literal: stack after push has %d items\n", stack->size);
 #endif
@@ -640,11 +661,11 @@ void run_interpreter(const char *source_code)
   struct hashmap *hashmap;
   char *memory;
 
-  stack = create_stack();
-  loop_stack = create_stack();
-  end_stack = create_stack();
+  stack = stack_create();
+  loop_stack = stack_create();
+  end_stack = stack_create();
   hashmap = hashmap_create();
-  memory = malloc(MEMORY_CAPACITY);
+  memory =( MEMORY_CAPACITY);
 
   init_scanner(&scanner, source_code);
 
@@ -658,7 +679,7 @@ void run_interpreter(const char *source_code)
   }
 
   while (stack->size > 0)
-    pop(stack);
+    stack_pop(stack);
   free(stack);
   free(loop_stack);
   free(end_stack);
