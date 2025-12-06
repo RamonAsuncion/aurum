@@ -13,6 +13,8 @@ struct stack {
   int size;
 };
 
+// TODO: rewrite these docstrings
+
 /**
  * @brief Creates a new stack with the given size.
  * @return A pointer to the newly created stack.
@@ -45,6 +47,12 @@ intptr_t stack_top(struct stack *stack);
  * @param stack The stack to print.
  */
 void stack_dump(struct stack *stack);
+
+/**
+ * @brief Clean up the stack
+ * @param stack The stack to clean up.
+ */
+void stack_free(struct stack *stack);
 
 /**
  * @brief Checks if the stack is empty.

@@ -48,7 +48,7 @@ static char *read_line(void)
   }
 }
 
-static void interactive_mode(void)
+static void interactive_mode(struct interpreter_state *state)
 {
   char *line;
   printf("Welcome to Aurum!\n");
@@ -64,13 +64,12 @@ static void interactive_mode(void)
       exit(0);
     }
 
-    run_interpreter(line);
+    interpreter_run(state, line);
     free(line);
   }
 }
 
-
-static void run_interpreter_from_file(const char *file_name)
+static void interpreter_run_from_file(struct interpreter_state *state, const char *file_name)
 {
   int fd = open(file_name, O_RDONLY);
   if (fd == -1) {
@@ -95,7 +94,7 @@ static void run_interpreter_from_file(const char *file_name)
     return;
   }
 
-  run_interpreter(source_code);
+  interpreter_run(state, source_code);
 
   if (munmap(source_code, file_info.st_size) == -1) {
     perror("[aurum] failed to unmap the file");
@@ -105,8 +104,9 @@ static void run_interpreter_from_file(const char *file_name)
 
 int main(int argc, char *argv[])
 {
+  struct interpreter_state *state = interpreter_init();
   if (argc < 2) {
-    interactive_mode();
+    interactive_mode(state);
   } else {
     const char *file_name = argv[1];
     const char *file_extension = strrchr(file_name, '.');
@@ -115,8 +115,10 @@ int main(int argc, char *argv[])
       printf("[aurum]: unknown file extension.\n");
       return 1;
     }
-    run_interpreter_from_file(file_name);
+    interpreter_run_from_file(state, file_name);
   }
+
+  interpreter_cleanup(state);
   return 0;
 }
 

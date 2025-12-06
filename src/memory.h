@@ -17,9 +17,16 @@
 void print_memory(char *memory, int size);
 
 /**
+ * @brief Createe a memory tape.
  * @param n The number of bytes to allocate.
  */
 void *memory_create(size_t n);
+
+/**
+ * clean up the memory tape.
+ * @param memory The memory to display.
+ */
+void memory_free(char *memory);
 
 #endif /* _MEMORY_H_ */
 

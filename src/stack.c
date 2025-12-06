@@ -69,8 +69,16 @@ void stack_dump(struct stack *stack)
   printf("+---------+---------+\n");
 }
 
+void stack_free(struct stack *stack)
+{
+  if (!stack) return;
+  free(stack->data);
+  free(stack);
+}
+
 bool is_stack_empty(struct stack *stack)
 {
   return stack->size == 0;
 }
+
 

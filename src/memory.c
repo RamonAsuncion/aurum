@@ -29,3 +29,9 @@ void *memory_create(size_t n)
   return p;
 }
 
+void memory_free(char *memory)
+{
+  if (!memory) return;
+  free(memory);
+}
+

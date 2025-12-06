@@ -1,3 +1,4 @@
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,8 +107,11 @@ struct macro *hashmap_get(struct hashmap *map, const char *key)
   return NULL;
 }
 
+// todo: this free function needs some work
 void hashmap_free(struct hashmap *map)
 {
+  if (!map) return;
+
   int i;
 
   for (i = 0; i < map->capacity; ++i) {
@@ -116,6 +120,7 @@ void hashmap_free(struct hashmap *map)
       free(map->entries[i]);
     }
   }
+
   free(map->entries);
   free(map);
 }
@@ -137,4 +142,3 @@ void hashmap_print(struct hashmap *map)
     }
   }
 }
-

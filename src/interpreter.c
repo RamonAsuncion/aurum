@@ -21,6 +21,22 @@ static void print_result(struct stack *stack)
     fprintf(stderr, "[aurum] empty stack.\n");
 }
 
+void op_rshft(struct stack *stack)
+{
+  intptr_t b = stack_pop(stack);
+  intptr_t a = stack_pop(stack);
+
+  stack_push(stack, a >> b);
+}
+
+void op_lshft(struct stack *stack)
+{
+  intptr_t b = stack_pop(stack);
+  intptr_t a = stack_pop(stack);
+
+  stack_push(stack, a << b);
+}
+
 static void op_print(struct stack *stack)
 {
   print_result(stack);
@@ -157,6 +173,12 @@ static void op_bitwise(struct stack *stack, const struct token *token)
   case TOKEN_BITWISE_NOT:
     result = ~a;
     stack_push(stack, result);
+    return;
+  case TOKEN_RIGHT_SHIFT:
+    op_rshft(stack);
+    return;
+  case TOKEN_LEFT_SHIFT:
+    op_lshft(stack);
     return;
   default:
     return;
@@ -541,6 +563,8 @@ static void execute_token(struct stack *stack, struct stack *loop_stack,
   case TOKEN_BITWISE_OR:
   case TOKEN_BITWISE_XOR:
   case TOKEN_BITWISE_NOT:
+  case TOKEN_LEFT_SHIFT:
+  case TOKEN_RIGHT_SHIFT:
     op_bitwise(stack, token);
     break;
   case TOKEN_STRING_LITERAL:
@@ -659,22 +683,43 @@ static void op_string_literal(struct stack *stack, char *memory,
   free(string);
 }
 
-void run_interpreter(const char *source_code)
+struct interpreter_state *interpreter_init(void)
+{
+  struct interpreter_state *state = malloc(sizeof(struct interpreter_state));
+  if (!state) {
+    fprintf(stderr, "[aurum] failed to allocate interpreter state\n");
+    exit(1);
+  }
+
+  state->stack = stack_create();
+  state->loop_stack = stack_create();
+  state->end_stack = stack_create();
+  state->hashmap = hashmap_create();
+  state->memory = memory_create(MEMORY_CAPACITY);
+
+  return state;
+}
+
+void interpreter_cleanup(struct interpreter_state *state)
+{
+  if (!state) return;
+  stack_free(state->stack);
+  stack_free(state->loop_stack);
+  stack_free(state->end_stack);
+  hashmap_free(state->hashmap);
+  memory_free(state->memory);
+  state->stack = NULL;
+  state->loop_stack = NULL;
+  state->end_stack = NULL;
+  state->hashmap = NULL;
+  state->memory = NULL;
+  free(state);
+}
+
+void interpreter_run(struct interpreter_state *state, const char *source_code)
 {
   struct scanner scanner;
   struct token token;
-  struct stack *stack;
-  struct stack *loop_stack;
-  struct stack *end_stack;
-  struct hashmap *hashmap;
-  char *memory;
-
-  stack = stack_create();
-  loop_stack = stack_create();
-  end_stack = stack_create();
-  hashmap = hashmap_create();
-  memory = memory_create(MEMORY_CAPACITY);
-
   init_scanner(&scanner, source_code);
 
   while ((token = scan_token(&scanner)).type != TOKEN_EOF) {
@@ -682,16 +727,8 @@ void run_interpreter(const char *source_code)
     fprintf(stderr, "[debug] main_loop: executing type=%d, lexeme='%s'\n",
         token.type, token.lexeme);
 #endif
-    execute_token(stack, loop_stack, end_stack, &scanner, hashmap,
-        memory, &token);
+    execute_token(state->stack, state->loop_stack, state->end_stack, &scanner,
+        state->hashmap, state->memory, &token);
   }
-
-  while (stack->size > 0)
-    stack_pop(stack);
-  free(stack);
-  free(loop_stack);
-  free(end_stack);
-  hashmap_free(hashmap);
-  free(memory);
 }
 
