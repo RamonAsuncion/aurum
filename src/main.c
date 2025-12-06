@@ -74,13 +74,13 @@ static void run_interpreter_from_file(const char *file_name)
 {
   int fd = open(file_name, O_RDONLY);
   if (fd == -1) {
-    perror("Error opening file for reading");
+    perror("[aurum] failed to open file for reading");
     return;
   }
 
   struct stat file_info = {0};
   if (fstat(fd, &file_info) == -1) {
-    perror("Error getting the file size");
+    perror("[aurum] failed to get file size");
     return;
   }
 
@@ -91,14 +91,14 @@ static void run_interpreter_from_file(const char *file_name)
   char *source_code = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if (source_code == MAP_FAILED) {
     close(fd);
-    perror("Error mmapping the file");
+    perror("[aurum] failed to map the file");
     return;
   }
 
   run_interpreter(source_code);
 
   if (munmap(source_code, file_info.st_size) == -1) {
-    perror("Error un-mmapping the file");
+    perror("[aurum] failed to unmap the file");
   }
   close(fd);
 }
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     const char *file_extension = strrchr(file_name, '.');
 
     if (!file_extension || strcmp(file_extension, ".au") != 0) {
-      printf("Error: Unknown-unsupported file format.\n");
+      printf("[aurum]: unknown file extension.\n");
       return 1;
     }
     run_interpreter_from_file(file_name);
