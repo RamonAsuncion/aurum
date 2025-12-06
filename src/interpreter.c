@@ -21,7 +21,7 @@ static void print_result(struct stack *stack)
     fprintf(stderr, "[aurum] empty stack.\n");
 }
 
-void op_rshft(struct stack *stack)
+static void op_rshft(struct stack *stack)
 {
   intptr_t b = stack_pop(stack);
   intptr_t a = stack_pop(stack);
@@ -29,7 +29,7 @@ void op_rshft(struct stack *stack)
   stack_push(stack, a >> b);
 }
 
-void op_lshft(struct stack *stack)
+static void op_lshft(struct stack *stack)
 {
   intptr_t b = stack_pop(stack);
   intptr_t a = stack_pop(stack);
