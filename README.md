@@ -1,5 +1,8 @@
 # Aurum Programming Language
 
+<img width="150" height="150" alt="output-onlinepngtools" src="https://github.com/user-attachments/assets/20e23696-4235-4fcc-8e0d-a8e041592f88" />
+
+
 Aurum is a programming language designed for simplicity and readability. It is a high-level, procedural, stack-oriented, interpreted language.
 
 > [!WARNING]  
