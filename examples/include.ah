@@ -1,1 +1,1 @@
-define print 1 1 3 systemcall end
+define print 1 1 3 syscall end
